@@ -1,23 +1,22 @@
 import { StatusBar } from "expo-status-bar";
 import { Redirect, Tabs } from "expo-router";
-import { Image, Text, View } from "react-native";
-
-import { icons } from "../../constants";
+import { Text, View } from "react-native";
+import { useSelector } from "react-redux";
 import { Loader } from "../../components";
-import { useGlobalContext } from "../../context/GlobalProvider";
+import Icon from "react-native-vector-icons/Ionicons"; // Use Ionicons or other icon libraries
 
-const TabIcon = ({ icon, color, name, focused }) => {
+const TabIcon = ({ iconName, color, name, focused }) => {
   return (
-    <View className="flex items-center justify-center gap-2">
-      <Image
-        source={icon}
-        resizeMode="contain"
-        tintColor={color}
-        className="w-6 h-6"
-      />
+    <View style={{ alignItems: "center", justifyContent: "center", gap: 2 }}>
+      {/* Use the Ionicons icon with vector icons */}
+      <Icon name={iconName} size={24} color={color} />
+      {/* Text component for the label */}
       <Text
-        className={`${focused ? "font-psemibold" : "font-pregular"} text-xs`}
-        style={{ color: color }}
+        style={{
+          color: color,
+          fontSize: 12,
+          fontWeight: focused ? "600" : "400",
+        }}
       >
         {name}
       </Text>
@@ -26,25 +25,24 @@ const TabIcon = ({ icon, color, name, focused }) => {
 };
 
 const TabLayout = () => {
-  const { loading, isLogged } = useGlobalContext();
+  const { loading, user, verified } = useSelector((state) => state.user);
 
-  if (!loading && !isLogged) return <Redirect href="/sign-in" />;
+  if (!loading && !user && verified) return <Redirect href="/sign-in" />;
 
   return (
     <>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: "#FFA001",
-          tabBarInactiveTintColor: "#CDCDE0",
+          tabBarActiveTintColor: "#468585",
+          tabBarInactiveTintColor: "#BDC3C7",
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: "#161622",
-            borderTopWidth: 1,
-            borderTopColor: "#232533",
+            backgroundColor: "white",
             height: 84,
           },
         }}
       >
+        {/* Common Tabs for Both Roles */}
         <Tabs.Screen
           name="home"
           options={{
@@ -52,7 +50,7 @@ const TabLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.home}
+                iconName="home-outline"
                 color={color}
                 name="Home"
                 focused={focused}
@@ -61,15 +59,33 @@ const TabLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="registered"
+          name="products"
           options={{
-            title: "Registered",
+            title: "Products",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.bookmark}
+                iconName="cube-outline"
                 color={color}
-                name="Registered"
+                name="Products"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+
+        {/* Role-Specific Tabs */}
+        <Tabs.Screen
+          name="myorders"
+          options={{
+            title: "My Orders",
+            headerShown: false,
+            href: user?.role === "customer" ? "/myorders" : null, 
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                iconName="list-outline"
+                color={color}
+                name="My Orders"
                 focused={focused}
               />
             ),
@@ -77,30 +93,32 @@ const TabLayout = () => {
         />
 
         <Tabs.Screen
-          name="create"
+          name="customers"
           options={{
-            title: "Create",
+            title: "Customers",
             headerShown: false,
+            href: user?.role === "shopOwner" ? "/customers" : null, 
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.plus}
+                iconName="people-outline"
                 color={color}
-                name="Create"
+                name="Customers"
                 focused={focused}
               />
             ),
           }}
         />
+
         <Tabs.Screen
-          name="profile"
+          name="settings"
           options={{
-            title: "Profile",
+            title: "Settings",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.profile}
+                iconName="settings-outline"
                 color={color}
-                name="Profile"
+                name="Settings"
                 focused={focused}
               />
             ),
@@ -108,8 +126,9 @@ const TabLayout = () => {
         />
       </Tabs>
 
+      {/* These components should be outside of Tabs */}
       <Loader isLoading={loading} />
-      <StatusBar backgroundColor="#161622" style="light" />
+      <StatusBar backgroundColor="#468585" style="light" />
     </>
   );
 };

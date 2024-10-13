@@ -3,6 +3,12 @@ import { useFonts } from "expo-font";
 import "react-native-url-polyfill/auto";
 import { SplashScreen, Stack, useRouter } from "expo-router";
 import GlobalProvider from "../context/GlobalProvider";
+import { Provider } from "react-redux"; // Redux provider
+import { PersistGate } from "redux-persist/integration/react"; // Persist gate for redux-persist
+import { persistor, store } from "../redux/store";
+import AddProduct from "./product/add-product";
+import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -20,8 +26,7 @@ const RootLayout = () => {
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
 
-  
-  const router = useRouter(); 
+  const router = useRouter();
 
   useEffect(() => {
     if (error) throw error;
@@ -31,21 +36,84 @@ const RootLayout = () => {
     }
   }, [fontsLoaded, error]);
 
-  if (!fontsLoaded ) {
-    return null; 
+  if (!fontsLoaded) {
+    return null; // Show nothing until fonts are loaded
   }
 
   return (
-    <GlobalProvider>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
-        <Stack.Screen name="event/[eventId]" options={{ headerShown: false }} />
-        <Stack.Screen name="edit/[eventId]" options={{ headerShown: false }} />
-      </Stack>
-    </GlobalProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <GlobalProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="notifications"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="track-daily-items"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="customer-credit"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="product/add-product"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="product/product-detail"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="product/product-edit"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="product/bulk-update"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="customer/add-customer"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="customer/customer-details"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="customer/customer-edit"
+              options={{ headerShown: false }}
+            />
+
+            <Stack.Screen
+              name="sale/product-selection-for-sale"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="sale/bill-generation"
+              options={{ headerShown: false }}
+            />
+
+            <Stack.Screen
+              name="sale/sales-performance"
+              options={{ headerShown: false }}
+            />
+
+            <Stack.Screen
+              name="sale/sales-history"
+              options={{ headerShown: false }}
+            />
+          </Stack>
+          </GestureHandlerRootView>
+          <StatusBar backgroundColor="#468585" style="light" />
+        </GlobalProvider>
+      </PersistGate>
+    </Provider>
   );
 };
 

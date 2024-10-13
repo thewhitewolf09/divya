@@ -26,13 +26,13 @@ The backend is hosted on Vercel. You can access the API at:
 
 ## Getting Started
 
-### 1. Clone the Repository and navigate to Eventify
+### 1. Clone the Repository and navigate to Divya
 
 ```bash
 git clone git clone https://github.com/your-username/Divya.git
 ```
 ```bash
-cd Eventify
+cd divya
 ```
 
 ### 2. Navigate to backend directory, install dependencies, set up your dotenv and then run the server
@@ -45,7 +45,7 @@ cd backend
 npm run dev
 ```
 
-### 4. Navigate to eventify directory, install dependencies and then start the react native application
+### 4. Navigate to divya directory, install dependencies and then start the react native application
 ```bash
 cd Divya
 ```

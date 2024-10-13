@@ -15,15 +15,46 @@ const UserSchema = new mongoose.Schema({
   },
   otp: {
     type: String,
-    required: true,
   },
   otpExpiry: {
     type: Date,
-    required: true,
   },
   isVerified: {
     type: Boolean,
     default: false,
+  },
+  shopLocation: {
+    address: {
+      street: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+      state: {
+        type: String,
+      },
+      postalCode: {
+        type: String,
+      },
+      country: {
+        type: String,
+      },
+    },
+    googleMapLocation: {
+      latitude: {
+        type: Number,
+      },
+      longitude: {
+        type: Number,
+      },
+    },
+  },
+  openingTime: {
+    type: String,
+  },
+  closingTime: {
+    type: String,
   },
 }, {
   timestamps: true,

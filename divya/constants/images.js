@@ -7,5 +7,6 @@ import logoSmall from "../assets/images/logo-small.png";
 import empty from "../assets/images/empty.png";
 import eventImage from "../assets/images/event.png"
 import avatar from "../assets/images/avatar.png"
+import demoproduct from "../assets/images/demoproduct.jpg"
 
-export default { profile, concertImage, cards, path, logo, logoSmall, empty, eventImage, avatar };
+export default { profile, concertImage, cards, path, logo, logoSmall, empty, eventImage, avatar,demoproduct};

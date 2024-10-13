@@ -10,11 +10,14 @@ export default (code, req, errorMessage) => {
 
   let Message = error_codes[key];
 
+
+
   if (Message.includes("server error")) {
     Message = errorMessage ?? Message
   } else {
-    Message= errorMessage ?? Message
+    Message= Message
   }
+
 
   return {
     resultMessage: Message,

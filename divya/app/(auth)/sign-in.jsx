@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Redirect, Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -10,22 +10,43 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { images } from "../../constants";
 import { CustomButton, FormField } from "../../components";
-import { useGlobalContext } from "../../context/GlobalProvider";
+import {
+  loginUser,
+  sendOtpUser,
+  verifyOtpUser,
+} from "../../redux/slices/userSlice";
 
 const SignIn = () => {
-  const { loading, isLogged, requestOtp, loginWithOtp } = useGlobalContext();
+  const dispatch = useDispatch();
+  const { loading, user, error } = useSelector((state) => state.user); // Redux state
 
-  if (!loading && isLogged) return <Redirect href="/home" />;
-
+  const [otpSent, setOtpSent] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
-  const [isOtpRequested, setOtpRequested] = useState(false);
   const [form, setForm] = useState({
     mobileNumber: "",
     otp: "",
   });
+
+  const [timer, setTimer] = useState(15); // Resend OTP timer
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    let interval;
+    if (otpSent && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setCanResend(true);
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, timer]);
 
   const handleRequestOtp = async () => {
     if (form.mobileNumber === "") {
@@ -34,32 +55,46 @@ const SignIn = () => {
     }
 
     setSubmitting(true);
-
     try {
-      await requestOtp(form.mobileNumber); // Call to request OTP
-      setOtpRequested(true); // Show OTP field after requesting OTP
+      await dispatch(loginUser(form.mobileNumber)).unwrap(); // Dispatch OTP request
       Alert.alert("Success", "OTP sent to your mobile number");
+      setOtpSent(true);
+      setTimer(15); // Reset the timer for resending OTP
+      setCanResend(false);
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", error || "Failed to send OTP");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+
+    try {
+      await dispatch(sendOtpUser(form.mobileNumber)).unwrap(); // Resend OTP
+      setTimer(15); // Reset the timer again
+      setCanResend(false);
+    } catch (error) {
+      Alert.alert("Error", error || "Failed to resend OTP");
+    }
+  };
+
   const handleSubmit = async () => {
-    if (form.mobileNumber === "" || (isOtpRequested && form.otp === "")) {
+    if (form.mobileNumber === "" || (otpSent && form.otp === "")) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     setSubmitting(true);
-
     try {
-      await loginWithOtp(form.mobileNumber, form.otp);
-      Alert.alert("Success", "User signed in successfully");
+      await dispatch(
+        verifyOtpUser({ mobile: form.mobileNumber, otp: form.otp })
+      ).unwrap();
       router.replace("/home");
+      setOtpSent(false);
     } catch (error) {
-      Alert.alert("Error in login", error.message);
+      Alert.alert("Error", error || "Failed to login");
     } finally {
       setSubmitting(false);
     }
@@ -72,7 +107,6 @@ const SignIn = () => {
         style={{ flex: 1 }}
       >
         <ScrollView
-   
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
@@ -98,7 +132,7 @@ const SignIn = () => {
               resizeMode="contain"
             />
 
-            <Text className="text-2xl font-semibold text-black mt-10 font-psemibold">
+            <Text className="text-2xl font-semibold text-black font-psemibold">
               Log in to Divya
             </Text>
 
@@ -113,7 +147,7 @@ const SignIn = () => {
             />
 
             {/* OTP Input (conditionally rendered) */}
-            {isOtpRequested && (
+            {otpSent && (
               <FormField
                 title="OTP"
                 value={form.otp}
@@ -125,11 +159,36 @@ const SignIn = () => {
 
             {/* Button for requesting OTP or submitting */}
             <CustomButton
-              title={isOtpRequested ? "Submit OTP" : "Request OTP"}
-              handlePress={isOtpRequested ? handleSubmit : handleRequestOtp}
+              title={otpSent ? "Submit OTP" : "Request OTP"}
+              handlePress={otpSent ? handleSubmit : handleRequestOtp}
               containerStyles="mt-7"
               isLoading={isSubmitting}
             />
+
+            {/* OTP Resend Logic */}
+            {otpSent && (
+              <View className="mt-3">
+                <Text style={{ textAlign: "center", marginBottom: 10 }}>
+                  {timer > 0
+                    ? `Resend OTP available in ${timer}s`
+                    : "Didn’t receive the OTP?"}
+                </Text>
+                {timer === 0 && (
+                  <TouchableOpacity onPress={handleResendOtp}>
+                    <Text
+                      style={{
+                        color: "teal",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        textDecorationLine: "underline",
+                      }}
+                    >
+                      Resend OTP
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             <View className="flex justify-center pt-5 flex-row gap-2">
               <Text className="text-lg text-gray-100 font-pregular">

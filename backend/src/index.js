@@ -4,6 +4,9 @@ import cors from "cors";
 import routes from "./routes/index.js";
 import { logger } from "./utils/index.js";
 import mongoose from "mongoose";
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerConfig from './config/swagger.config.js'; 
 
 const app = express();
 
@@ -86,6 +89,14 @@ await mongoose
       resultCode: resultCode,
     });
   });
+
+// Initialize swagger-jsdoc with your configuration
+const specs = swaggerJsdoc(swaggerConfig);
+
+// Serve Swagger documentation on the `/api-docs` endpoint
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+
 
 // Server Listening
 app.listen(port, (err) => {

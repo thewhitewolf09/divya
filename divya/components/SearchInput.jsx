@@ -1,37 +1,56 @@
-import { useState } from "react";
-import { router, usePathname } from "expo-router";
-import { View, TouchableOpacity, Image, TextInput, Alert } from "react-native";
+import { useState, useEffect } from "react";
+import { View, TextInput } from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome";
 
-import { icons } from "../constants";
-
-const SearchInput = ({ initialQuery }) => {
-  const pathname = usePathname();
+const SearchInput = ({
+  initialQuery,
+  products = [],
+  customers = [],
+  setFilteredResults = () => {}, // Default empty function to prevent errors
+  placeholder,
+}) => {
   const [query, setQuery] = useState(initialQuery || "");
 
+  // Debounced search function to avoid too many re-renders
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (query !== "") {
+        const searchQuery = query.toLowerCase();
+
+        // Filter products based on name
+        const filteredProducts = products.filter((product) =>
+          product.name.toLowerCase().includes(searchQuery)
+        );
+
+        // Filter customers based on name or phone
+        const filteredCustomers = customers.filter(
+          (customer) =>
+            customer.name.toLowerCase().includes(searchQuery) ||
+            customer.phone.includes(searchQuery) // Also search by phone number
+        );
+
+        // Combine filtered products and customers into a single result list
+        setFilteredResults([...filteredProducts, ...filteredCustomers]);
+      } else {
+        // If query is empty, clear the results
+        setFilteredResults(customers || products);
+      }
+    }, 300); // Debounce time of 300ms to delay the search
+
+    return () => clearTimeout(timeoutId); // Cleanup timeout on unmount or query change
+  }, [query, products, customers, setFilteredResults]);
+
   return (
-    <View className="flex flex-row items-center space-x-4 w-full h-16 px-4 bg-black-100 rounded-2xl border-2 border-black-200 focus:border-secondary">
+    <View className="flex flex-row items-center space-x-4 w-full h-16 px-4 mb-3 bg-white rounded-2xl border-2 border-teal-600 focus:border-secondary">
       <TextInput
-        className="text-base mt-0.5 text-white flex-1 font-pregular"
+        className="text-base mt-0.5 text-gray flex-1 font-semibold font-pregular"
         value={query}
-        placeholder="Search an event"
-        placeholderTextColor="#CDCDE0"
-        onChangeText={(e) => setQuery(e)}
+        placeholder={placeholder || "Search a Product or Customer"}
+        placeholderTextColor="gray"
+        onChangeText={(text) => setQuery(text)} // Update the query state
       />
 
-      <TouchableOpacity
-        onPress={() => {
-          if (query === "")
-            return Alert.alert(
-              "Missing Query",
-              "Please input something to search results across database"
-            );
-
-          if (pathname.startsWith("/search")) router.setParams({ query });
-          else router.push(`/search/${query}`);
-        }}
-      >
-        <Image source={icons.search} className="w-5 h-5" resizeMode="contain" />
-      </TouchableOpacity>
+      <Icon name="search" size={24} color="#50B498" />
     </View>
   );
 };

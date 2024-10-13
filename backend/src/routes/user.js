@@ -3,40 +3,28 @@ import { auth, imageUpload } from "../middlewares/index.js";
 import {
   register,
   login,
-  verifyEmail,
-  forgotPassword,
-  sendVerificationCode,
-  changePassword,
-  editUser,
-  getUser,
   deleteUser,
-  registeredEvents,
-  createdEvents,
-  searchEvents
+  verifyOtp,
+  sendOtp,
+  fetchUser,
+  updateUser,
+  updateShopTimings,
 } from "../controllers/user/index.js";
-
 
 const router = Router();
 
 // AUTH
 router.post("/register", register);
 router.post("/login", login);
-router.get("/get-user/:id", auth, getUser);
-router.delete("/delete-user", auth, deleteUser);
-router.get("/registered-events", auth, registeredEvents);
-router.get("/created-events",auth, createdEvents);
-router.get("/search/:searchQuery", auth, searchEvents);
+router.post("/verify-otp", verifyOtp);
+router.post("/send-otp", sendOtp);
 
-
-router.post("/verify-email", verifyEmail);
-router.post("/forgot-password", auth, forgotPassword);
-router.post("/send-verification-code", sendVerificationCode);
+router.get("/:id", fetchUser);
+router.patch("/:id", auth, updateUser);
+router.patch("/:id/shop-timing", auth, updateShopTimings);
+router.delete("/:id", auth, deleteUser);
 
 // EDIT
-router.post("/change-password", auth, changePassword);
-router.put("/", auth, imageUpload, editUser);
-
-
-
+router.put("/", auth, imageUpload, updateUser);
 
 export default router;
