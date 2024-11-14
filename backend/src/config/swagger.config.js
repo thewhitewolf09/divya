@@ -1,3 +1,9 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export default {
   swaggerDefinition: {
     openapi: "3.0.0",
@@ -11,15 +17,13 @@ export default {
       },
       contact: {
         name: "Sumit Nirmal",
-        url: "https://sumitnirmal.netlify.app", // Add your contact URL if applicable
-        email: "sumitramprakashnirmal@gmail.com", // Provide an email if available
+        url: "https://sumitnirmal.netlify.app",
+        email: "sumitramprakashnirmal@gmail.com",
       },
     },
     servers: [
       { url: "https://divya-blond.vercel.app/" },
-      {
-        url: "http://localhost:8080/", 
-      },
+      { url: "http://localhost:8080/" },
     ],
   },
   tags: [
@@ -33,17 +37,17 @@ export default {
     { name: "Cart", description: "API for cart management" },
   ],
   apis: [
-    "src/routes/*.js", // API route definitions
-    "src/models/*.js", // Model definitions
-    "src/controllers/user/*.js", // User-related controllers
-    "src/controllers/user/auth/*.js", // User authentication controllers
-    "src/controllers/customer/*.js", // Customer-related controllers
-    "src/controllers/product/*.js", // Product-related controllers
-    "src/controllers/sales/*.js", // Sales-related controllers
-    "src/controllers/membership/*.js", // Membership-related controllers
-    "src/controllers/payments/*.js", // Payment-related controllers
-    "src/controllers/order/*.js", // Order-related controllers
-    "src/controllers/cart/*.js", // Cart-related controllers
-    "src/middlewares/*.js", // Middleware if you want to document it
+    path.resolve(__dirname, "../routes/*.js"), // Assuming routes are in src/routes
+    path.resolve(__dirname, "../models/*.js"), // Assuming models are in src/models
+    path.resolve(__dirname, "../controllers/user/*.js"),
+    path.resolve(__dirname, "../controllers/user/auth/*.js"),
+    path.resolve(__dirname, "../controllers/customer/*.js"),
+    path.resolve(__dirname, "../controllers/product/*.js"),
+    path.resolve(__dirname, "../controllers/sales/*.js"),
+    path.resolve(__dirname, "../controllers/membership/*.js"),
+    path.resolve(__dirname, "../controllers/payments/*.js"),
+    path.resolve(__dirname, "../controllers/order/*.js"),
+    path.resolve(__dirname, "../controllers/cart/*.js"),
+    path.resolve(__dirname, "../middlewares/*.js"),
   ],
 };
