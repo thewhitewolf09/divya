@@ -72,7 +72,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 app.use((error, req, res, _next) => {
   res.status(error.status || 500);
   let resultCode = "00015";
