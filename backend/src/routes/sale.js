@@ -3,6 +3,7 @@ import { auth } from "../middlewares/index.js";
 import {
   addNewSale,
   deleteSale,
+  getAllSales,
   getCreditSales,
   getCustomerSales,
   getMonthlySales,
@@ -13,7 +14,6 @@ import {
   getSalesReport,
   getSalesSummary,
   getTopSellingProducts,
-  updateCreditSalePayment,
   updateSale,
 } from "../controllers/sales/index.js";
 
@@ -22,6 +22,7 @@ const router = Router();
 router.post("/add", auth, addNewSale);
 router.put("/:id", auth, updateSale);
 router.delete("/:id", auth, deleteSale);
+router.get("/all", getAllSales);
 router.get("/range", getSalesByDateRange);
 router.get("/category/:categoryId", getSalesByProductCategory);
 router.get("/top-products", getTopSellingProducts);
@@ -32,6 +33,6 @@ router.get("/product/:productId", getProductSalesReport);
 router.get("/report", getSalesReport);
 router.get("/summary", getSalesSummary);
 router.get("/credit/outstanding", getOutstandingCredit);
-router.patch("/credit/:saleId/payment", auth, updateCreditSalePayment);
+
 
 export default router;

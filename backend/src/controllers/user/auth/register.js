@@ -1,3 +1,145 @@
+/**
+ * @swagger
+ * /api/users/register:
+ *   post:
+ *     summary: Register a new user (shop owner or customer) and generate OTP for verification.
+ *     description: Registers a user with specified details and sends an OTP to their mobile for verification. It handles both shop owner and customer roles.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mobile:
+ *                 type: string
+ *                 description: User's mobile number.
+ *                 example: "1234567890"
+ *               name:
+ *                 type: string
+ *                 description: Full name of the user.
+ *                 example: "John Doe"
+ *               role:
+ *                 type: string
+ *                 description: Role of the user - either 'shopOwner' or 'customer'.
+ *                 example: "shopOwner"
+ *               address:
+ *                 type: string
+ *                 description: Address of the user (for customer).
+ *                 example: "123 Main St, City, Country"
+ *               shopLocation:
+ *                 type: object
+ *                 properties:
+ *                   address:
+ *                     type: string
+ *                     description: Shop address for shop owners.
+ *                     example: "Shop No. 1, Market St"
+ *                   googleMapLocation:
+ *                     type: object
+ *                     properties:
+ *                       latitude:
+ *                         type: number
+ *                         example: 12.9716
+ *                       longitude:
+ *                         type: number
+ *                         example: 77.5946
+ *               whatsappNumber:
+ *                 type: string
+ *                 description: WhatsApp number for customer role.
+ *                 example: "1234567890"
+ *               notes:
+ *                 type: string
+ *                 description: Optional notes for customer.
+ *                 example: "Preferred delivery time: morning"
+ *               deviceToken:
+ *                 type: string
+ *                 description: Device token for push notifications.
+ *                 example: "device_token_example"
+ *               openingTime:
+ *                 type: string
+ *                 description: Opening time for shop owners.
+ *                 example: "09:00 AM"
+ *               closingTime:
+ *                 type: string
+ *                 description: Closing time for shop owners.
+ *                 example: "09:00 PM"
+ *               addedBy:
+ *                 type: string
+ *                 description: ID of the shop owner who added the customer.
+ *                 example: "shopOwner123"
+ *     responses:
+ *       200:
+ *         description: User registered successfully, OTP generated and sent to mobile.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "You registered successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00035"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     mobile:
+ *                       type: string
+ *                       example: "1234567890"
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     role:
+ *                       type: string
+ *                       example: "shopOwner"
+ *                     isVerified:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Validation error with the provided details (e.g., invalid mobile number).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00025"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Invalid name format."
+ *       409:
+ *         description: User already exists.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00032"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Account already exists."
+ *       500:
+ *         description: Internal server error during user registration.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00031"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Internal server error."
+ */
+
+
 import { User, Customer } from "../../../models/index.js"; // Assuming Customer is imported too
 import {
   errorHelper,
@@ -26,8 +168,16 @@ export default async (req, res) => {
       .json(errorHelper(code, req, error.details[0].message));
   }
 
-  const { mobile, name, role, address, shopLocation, whatsappNumber, notes } =
-    req.body;
+  const {
+    mobile,
+    name,
+    role,
+    address,
+    shopLocation,
+    whatsappNumber,
+    notes,
+    deviceToken,
+  } = req.body;
 
   let exists;
 
@@ -62,6 +212,7 @@ export default async (req, res) => {
       otp,
       otpExpiry,
       isVerified: false,
+      deviceToken,
       shopLocation: {
         address: shopLocation.address,
         googleMapLocation: shopLocation.googleMapLocation || {
@@ -82,6 +233,7 @@ export default async (req, res) => {
       isVerified: false,
       whatsappNumber,
       address: address,
+      deviceToken,
       addedBy: req.body.addedBy || null, // Assuming the shop owner adds customers
       notes: req.body.notes || null,
     });

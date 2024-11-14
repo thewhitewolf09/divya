@@ -12,7 +12,6 @@ import {
   TextInput,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { useGlobalContext } from "../../context/GlobalProvider";
 import { useFocusEffect } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,47 +21,37 @@ import NotificationsModal from "../../components/NotificationSettings";
 import RateWeightCalculator from "../../components/RateWeightCalculator";
 import HelpSupport from "../../components/HelpSupport";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../redux/slices/userSlice";
+import {
+  fetchUser,
+  logout,
+  updateShopTimings,
+} from "../../redux/slices/userSlice";
 import { router } from "expo-router";
+import { fetchCustomerDetails } from "../../redux/slices/customerSlice";
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
-  const { userToken } = useGlobalContext();
+  const { user } = useSelector((state) => state.user);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Demo user data
-  const userData = {
-    mobile: "+919876543210",
-    name: "Rahul Sharma",
-    isVerified: true,
-    shopLocation: {
-      address: {
-        street: "456 MG Road",
-        city: "Bangalore",
-        state: "Karnataka",
-        postalCode: "560001",
-        country: "India",
-      },
-      googleMapLocation: {
-        latitude: 12.9716,
-        longitude: 77.5946,
-      },
-    },
-    openingTime: "10:00 AM",
-    closingTime: "9:00 PM",
-  };
+
   const [shopTimings, setShopTimings] = useState({
-    openingTime: userData.openingTime,
-    closingTime: userData.closingTime,
+    openingTime: user?.openingTime || "",
+    closingTime: user?.closingTime || "",
   });
 
+  // Define settings options based on user role
   const settingsOptions = [
-    { id: "1", name: "Shop Timings", icon: "time" },
     { id: "2", name: "Notifications", icon: "notifications" },
     { id: "3", name: "Rate/Weight Calculator", icon: "calculator" },
     { id: "4", name: "Help & Support", icon: "help-circle" },
   ];
+
+  // If the user is a shop owner, add "Shop Timings" option
+  if (user?.role === "shopOwner") {
+    settingsOptions.unshift({ id: "1", name: "Shop Timings", icon: "time" });
+  }
 
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -72,13 +61,13 @@ const SettingsScreen = () => {
     setIsMapExpanded(!isMapExpanded);
   };
 
-  const updateTimings = (newTimings) => {
-    setShopTimings(newTimings);
-  };
-
   const fetchSettings = async () => {
     setIsLoading(true);
-    // Fetch your settings from the API if needed
+    if (user.role === "customer") {
+      await dispatch(fetchCustomerDetails(user._id));
+    } else {
+      await dispatch(fetchUser(user._id));
+    }
     setIsLoading(false);
   };
 
@@ -94,11 +83,30 @@ const SettingsScreen = () => {
   };
 
   const handleSaveTimings = (newOpeningTime, newClosingTime) => {
-    setShopTimings({
-      openingTime: newOpeningTime,
-      closingTime: newClosingTime,
-    });
-    setModalVisible(false);
+    dispatch(
+      updateShopTimings({
+        userId: user._id,
+        shopTimings: {
+          openingTime: newOpeningTime,
+          closingTime: newClosingTime,
+        },
+      })
+    )
+      .unwrap()
+      .then((updatedUser) => {
+        setShopTimings({
+          openingTime: newOpeningTime,
+          closingTime: newClosingTime,
+        });
+        setModalVisible(false);
+
+        // Alert for successful update
+        Alert.alert("Success", "Shop timings updated successfully!");
+      })
+      .catch((error) => {
+        // Alert for error
+        Alert.alert("Error", error);
+      });
   };
 
   const handleLogout = () => {
@@ -125,7 +133,6 @@ const SettingsScreen = () => {
 
   return (
     <SafeAreaView className="bg-white h-full">
-      <Loader isLoading={isLoading} />
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -152,75 +159,110 @@ const SettingsScreen = () => {
                 <Ionicons name="person-circle" size={60} color="#0f766e" />
                 <View className="ml-4 flex-1">
                   <Text className="text-xl font-semibold text-gray-800">
-                    {userData.name}
+                    {user.name}
                   </Text>
-                  <Text className="text-gray-600">{userData.mobile}</Text>
-                  <Text className="text-gray-800 font-bold mt-1">
-                    {userData.openingTime} - {userData.closingTime}
-                  </Text>
-                  <Text className="text-gray-600 mt-1">
-                    {userData.shopLocation.address.street},{" "}
-                    {` ${userData.shopLocation.address.city},`}{" "}
-                    {` ${userData.shopLocation.address.state},`}{" "}
-                    {` ${userData.shopLocation.address.country}`}
-                  </Text>
+                  <Text className="text-gray-600">{user.mobile}</Text>
+
+                  {/* Display shop timings and address for shopOwner */}
+                  {user?.role === "shopOwner" && (
+                    <>
+                      <Text className="text-gray-800 font-bold mt-1">
+                        {shopTimings.openingTime} - {shopTimings.closingTime}
+                      </Text>
+                      <Text className="text-gray-600 mt-1">
+                        {user?.shopLocation?.address?.street},{" "}
+                        {user?.shopLocation?.address?.city},{" "}
+                        {user?.shopLocation?.address?.state},{" "}
+                        {user?.shopLocation?.address?.country}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* Display address for customer */}
+                  {user?.role === "customer" && (
+                    <Text className="text-gray-600 mt-1">
+                      {user?.address?.street}, {user?.address?.city},{" "}
+                      {user?.address?.state}, {user?.address?.country}
+                    </Text>
+                  )}
                 </View>
               </View>
             </LinearGradient>
           </View>
 
-          {/* Google Map */}
-          <View className={`mb-4 rounded-lg shadow-lg`}>
-            <View
-              style={{
-                borderColor: "#0f766e",
-                borderWidth: 1,
-                borderRadius: 10,
-                overflow: "hidden",
-              }}
-            >
-              <MapView
-                style={{ height: isMapExpanded ? "100%" : 200 }}
-                initialRegion={{
-                  latitude: userData.shopLocation.googleMapLocation.latitude,
-                  longitude: userData.shopLocation.googleMapLocation.longitude,
-                  latitudeDelta: 0.005,
-                  longitudeDelta: 0.005,
+          {/* Google Map for shopOwner */}
+          {user?.role === "shopOwner" && user?.shopLocation && (
+            <View className={`mb-4 rounded-lg shadow-lg`}>
+              <View
+                style={{
+                  borderColor: "#0f766e",
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  overflow: "hidden",
                 }}
               >
-                <Marker
-                  coordinate={{
-                    latitude: userData.shopLocation.googleMapLocation.latitude,
-                    longitude:
-                      userData.shopLocation.googleMapLocation.longitude,
+                <MapView
+                  style={{ height: isMapExpanded ? "100%" : 200 }}
+                  initialRegion={{
+                    latitude: user.shopLocation.googleMapLocation.latitude,
+                    longitude: user.shopLocation.googleMapLocation.longitude,
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
                   }}
-                  title={userData.name}
-                  description={`${userData.shopLocation.address.street}, ${userData.shopLocation.address.city}, ${userData.shopLocation.address.state}`}
-                />
-              </MapView>
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: user.shopLocation.googleMapLocation.latitude,
+                      longitude: user.shopLocation.googleMapLocation.longitude,
+                    }}
+                    title={user.name}
+                    description={`${user.shopLocation.address.street}, ${user.shopLocation.address.city}, ${user.shopLocation.address.state}`}
+                  />
+                </MapView>
 
-              {/* Address Text */}
-              <View className="absolute bottom-0 left-0 right-0 p-2 bg-white rounded-lg">
-                <Text className="text-center text-sm font-semibold">
-                  {userData.shopLocation.address.street},{" "}
-                  {userData.shopLocation.address.city},{" "}
-                  {userData.shopLocation.address.state}
-                </Text>
+                {/* Address Text */}
+                <View className="absolute bottom-0 left-0 right-0 p-2 bg-white rounded-lg">
+                  <Text className="text-center text-sm font-semibold">
+                    {user.shopLocation.address.street},{" "}
+                    {user.shopLocation.address.city},{" "}
+                    {user.shopLocation.address.state}
+                  </Text>
+                </View>
+
+                {/* Toggle Button */}
+                <TouchableOpacity
+                  onPress={toggleMapSize}
+                  className="absolute right-2 top-2 bg-white p-2 rounded-full shadow-md"
+                >
+                  <Ionicons
+                    name={isMapExpanded ? "contract" : "expand"}
+                    size={24}
+                    color="#0f766e"
+                  />
+                </TouchableOpacity>
               </View>
-
-              {/* Toggle Button */}
-              <TouchableOpacity
-                onPress={toggleMapSize}
-                className="absolute right-2 top-2 bg-white p-2 rounded-full shadow-md"
-              >
-                <Ionicons
-                  name={isMapExpanded ? "contract" : "expand"}
-                  size={24}
-                  color="#0f766e"
-                />
-              </TouchableOpacity>
             </View>
-          </View>
+          )}
+
+          {/* Payment History Button for Customers */}
+          {user?.role === "customer" && (
+            <TouchableOpacity
+              className="flex flex-row items-center p-4 bg-teal-50 rounded-lg shadow-md mb-3 border border-teal-600"
+              onPress={() =>
+                router.push({
+                  pathname: "/sale/payment-history",
+                  params: {
+                    customerId: user._id,
+                  },
+                })
+              }
+            >
+              <Ionicons name="wallet-outline" size={30} color="#0f766e" />
+              <Text className="ml-4 text-lg font-semibold text-gray-800">
+                Payment History
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Settings Options List */}
           <FlatList
@@ -240,11 +282,11 @@ const SettingsScreen = () => {
         <View className="flex-1 justify-center items-center bg-white ">
           {currentOption?.id === "1" && (
             <ShopTimings
-              userData={{
+              user={{
                 openingTime: shopTimings.openingTime,
                 closingTime: shopTimings.closingTime,
               }}
-              onSave={updateTimings}
+              onSave={handleSaveTimings}
               setModalVisible={setModalVisible}
             />
           )}

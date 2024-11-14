@@ -1,3 +1,97 @@
+/**
+ * @swagger
+ * /api/sales/summary:
+ *   get:
+ *     summary: Retrieve a summary of sales within a date range
+ *     description: Fetch a summary of total sales, total revenue, and average sale amount. Optionally, a date range can be provided to filter the data.
+ *     tags:
+ *       - Sales
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         required: false
+ *         description: The start date for the sales summary in ISO format (e.g., "2024-01-01"). If not provided, all sales will be considered.
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         required: false
+ *         description: The end date for the sales summary in ISO format (e.g., "2024-01-31"). If not provided, all sales will be considered.
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Sales summary retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Success message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Success code
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     totalSales:
+ *                       type: integer
+ *                       description: Total number of sales
+ *                     totalRevenue:
+ *                       type: number
+ *                       format: float
+ *                       description: Total revenue generated
+ *                     averageSaleAmount:
+ *                       type: number
+ *                       format: float
+ *                       description: The average sale amount, rounded to two decimal places
+ *       400:
+ *         description: Invalid request (startDate or endDate format error)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message indicating invalid date format or other parameter issues
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code for invalid request
+ *       404:
+ *         description: No sales found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message indicating no sales found for the given period
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code for no sales found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code for server errors
+ */
+
+
+
 import { Sale } from '../../models/index.js';
 import { errorHelper, getText } from '../../utils/index.js';
 

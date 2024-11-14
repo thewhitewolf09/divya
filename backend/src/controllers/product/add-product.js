@@ -1,3 +1,106 @@
+/**
+ * @swagger
+ * /api/products/add:
+ *   post:
+ *     summary: Create a new product
+ *     description: Adds a new product to the inventory with optional variants.
+ *     tags:
+ *       - Product
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Name of the product
+ *                 example: "Sample Product"
+ *               category:
+ *                 type: string
+ *                 description: Category of the product
+ *                 example: "Electronics"
+ *               price:
+ *                 type: number
+ *                 description: Price of the product
+ *                 example: 1500
+ *               stockQuantity:
+ *                 type: number
+ *                 description: Available stock quantity of the product
+ *                 example: 50
+ *               unit:
+ *                 type: string
+ *                 description: Unit of the product (e.g., "piece", "kg")
+ *                 example: "piece"
+ *               description:
+ *                 type: string
+ *                 description: Description of the product
+ *                 example: "A high-quality sample product."
+ *               variants:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     variantName:
+ *                       type: string
+ *                       description: Name of the variant
+ *                       example: "Variant 1"
+ *                     variantPrice:
+ *                       type: number
+ *                       description: Price of the variant
+ *                       example: 1200
+ *                     variantStockQuantity:
+ *                       type: number
+ *                       description: Stock quantity of the variant
+ *                       example: 25
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product added successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 product:
+ *                   $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Invalid input or missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Required fields are missing."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00025"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "An error occurred."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

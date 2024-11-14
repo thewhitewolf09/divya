@@ -1,15 +1,96 @@
+/**
+ * @swagger
+ * /api/users/{id}/shop-timing:
+ *   patch:
+ *     summary: Update shop opening and closing times
+ *     description: Allows authenticated users to update their shop's opening and closing times.
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user (shop owner) to update shop timings for
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         description: New shop timings
+ *         schema:
+ *           type: object
+ *           properties:
+ *             openingTime:
+ *               type: string
+ *               description: Shop opening time in HH:MM AM/PM format
+ *               example: "09:00 AM"
+ *             closingTime:
+ *               type: string
+ *               description: Shop closing time in HH:MM AM/PM format
+ *               example: "09:00 PM"
+ *     responses:
+ *       200:
+ *         description: Shop timings updated successfully
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Success message indicating shop timings were updated
+ *             resultCode:
+ *               type: string
+ *               description: Success code
+ *             user:
+ *               type: object
+ *               description: User object with updated shop timings
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: User ID
+ *                 openingTime:
+ *                   type: string
+ *                   description: Updated opening time of the shop
+ *                 closingTime:
+ *                   type: string
+ *                   description: Updated closing time of the shop
+ *       400:
+ *         description: Bad request due to invalid input
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Error message for validation issues
+ *             resultCode:
+ *               type: string
+ *       404:
+ *         description: User not found
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Error message indicating user not found
+ *             resultCode:
+ *               type: string
+ *       500:
+ *         description: Internal server error
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Error message for server error
+ *             resultCode:
+ *               type: string
+ */
+
+
 import { User } from "../../models/index.js";
-import { validateShopTiming } from "../../validators/user.validator.js"; // Assuming you have this validator
 import { errorHelper, logger, getText } from "../../utils/index.js";
 
 export default async (req, res) => {
-  // Validate request body
-  const { error } = validateShopTiming(req.body);
-  if (error) {
-    let code = "00077";
-    const message = error.details[0].message;
-    return res.status(400).json(errorHelper(code, req, message));
-  }
+  
 
   // Find user by ID
   const user = await User.findById(req.params.id).catch((err) => {
@@ -20,8 +101,8 @@ export default async (req, res) => {
   }
 
   // Update shop's opening and closing time
-  if (req.body.openingTime) user.shopLocation.openingTime = req.body.openingTime;
-  if (req.body.closingTime) user.shopLocation.closingTime = req.body.closingTime;
+  if (req.body.openingTime) user.openingTime = req.body.openingTime;
+  if (req.body.closingTime) user.closingTime = req.body.closingTime;
 
   // Save the updated user/shop details
   await user.save().catch((err) => {

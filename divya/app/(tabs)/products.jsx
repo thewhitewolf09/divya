@@ -19,11 +19,10 @@ import { fetchAllProducts } from "../../redux/slices/productSlice";
 import { useSelector, useDispatch } from "react-redux";
 import BottomSheet from "@gorhom/bottom-sheet";
 
-
 const Product = () => {
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector((state) => state.product);
-
+  const { user } = useSelector((state) => state.user);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeSheet, setActiveSheet] = useState(null);
@@ -33,7 +32,7 @@ const Product = () => {
   const sortSheetRef = useRef(null);
 
   // Snap points for the bottom sheet
-  const snapPoints = useMemo(() => ["25%", "50%", "75%",], []);
+  const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
 
   // Function to toggle the filter bottom sheet
   const handleOpenFilter = () => {
@@ -198,27 +197,30 @@ const Product = () => {
                 </TouchableOpacity>
               </View>
             )}
-
             ListEmptyComponent={() => (
               <View className="flex items-center justify-center mt-10">
-                <Text className="text-gray-600 text-lg">No products available.</Text>
+                <Text className="text-gray-600 text-lg">
+                  No products available.
+                </Text>
               </View>
             )}
           />
-
+          
           {/* Quick Actions */}
-          <View className="flex flex-row flex-wrap justify-evenly mb-2 ">
-            <ActionButton
-              title="🛒 Add Product"
-              colors={["#DEF9C4", "#9CDBA6"]}
-              onPress={() => router.replace("/product/add-product")}
-            />
-            <ActionButton
-              title="📦 Bulk Update"
-              colors={["#50B498", "#468585"]}
-              onPress={() => router.replace("/product/bulk-update")}
-            />
-          </View>
+          {user?.role === "shopOwner" ? (
+            <View className="flex flex-row flex-wrap justify-evenly mb-2 ">
+              <ActionButton
+                title="🛒 Add Product"
+                colors={["#DEF9C4", "#9CDBA6"]}
+                onPress={() => router.replace("/product/add-product")}
+              />
+              <ActionButton
+                title="📦 Bulk Update"
+                colors={["#50B498", "#468585"]}
+                onPress={() => router.replace("/product/bulk-update")}
+              />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
 

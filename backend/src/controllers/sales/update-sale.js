@@ -1,3 +1,131 @@
+/**
+ * @swagger
+ * /api/sales/{id}:
+ *   put:
+ *     summary: Update sale details
+ *     description: Update the details of an existing sale based on the provided sale ID. Fields like quantity, price, and credit information can be updated.
+ *     tags:
+ *       - Sales
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the sale to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       description: Updated sale details. Only fields that need to be modified should be provided.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *                 description: New quantity of the product in the sale
+ *               price:
+ *                 type: number
+ *                 format: float
+ *                 description: New price of the product in the sale
+ *               isCredit:
+ *                 type: boolean
+ *                 description: Whether the sale is a credit sale
+ *               creditDetails:
+ *                 type: object
+ *                 properties:
+ *                   amountOwed:
+ *                     type: number
+ *                     format: float
+ *                     description: The amount owed in case of a credit sale
+ *                   paymentStatus:
+ *                     type: string
+ *                     description: The status of the credit payment (e.g., "pending")
+ *     responses:
+ *       200:
+ *         description: Sale updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Success message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Success code
+ *                 sale:
+ *                   type: object
+ *                   description: Updated sale details
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: Sale ID
+ *                     quantity:
+ *                       type: integer
+ *                       description: Quantity of the product
+ *                     price:
+ *                       type: number
+ *                       format: float
+ *                       description: Sale price per product
+ *                     isCredit:
+ *                       type: boolean
+ *                       description: Indicates if the sale is on credit
+ *                     creditDetails:
+ *                       type: object
+ *                       properties:
+ *                         amountOwed:
+ *                           type: number
+ *                           format: float
+ *                           description: Amount owed in credit sale
+ *                         paymentStatus:
+ *                           type: string
+ *                           description: Payment status (e.g., "pending")
+ *       400:
+ *         description: Bad request. Invalid or missing fields.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code
+ *       404:
+ *         description: Sale not found with the provided ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code
+ */
+
+
+
+
 import { Sale } from '../../models/index.js';
 import { errorHelper, getText } from '../../utils/index.js';
 

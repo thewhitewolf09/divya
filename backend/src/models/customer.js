@@ -15,6 +15,10 @@ const customerSchema = new mongoose.Schema({
   otp: {
     type: String,
   },
+  role: {
+    type: String,
+    default: "customer",
+  },
   otpExpiry: {
     type: Date,
   },
@@ -86,8 +90,9 @@ const customerSchema = new mongoose.Schema({
     enum: ["active", "inactive"],
     default: "inactive",
   },
-
-  // Changed dailyItems to an array
+  deviceToken: {
+    type: String,
+  },
   dailyItems: [
     {
       itemName: {

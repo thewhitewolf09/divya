@@ -1,3 +1,53 @@
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     summary: Delete a user (shop owner) by ID
+ *     description: Allows authenticated users to delete their profile or a shop owner by ID.
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user (shop owner) to be deleted
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User successfully deleted
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Success message indicating the user was deleted
+ *             resultCode:
+ *               type: string
+ *               description: Success code
+ *       404:
+ *         description: User not found
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Error message indicating user not found
+ *             resultCode:
+ *               type: string
+ *       500:
+ *         description: Internal server error
+ *         schema:
+ *           type: object
+ *           properties:
+ *             resultMessage:
+ *               type: string
+ *               description: Error message for server error
+ *             resultCode:
+ *               type: string
+ */
+
+
 import { User } from "../../models/index.js";
 import { errorHelper, logger, getText } from "../../utils/index.js";
 

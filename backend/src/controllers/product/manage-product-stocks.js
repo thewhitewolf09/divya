@@ -1,3 +1,101 @@
+/**
+ * @swagger
+ * /api/products/{id}/stock:
+ *   patch:
+ *     summary: Manage product stock by adding or subtracting quantity
+ *     description: Adjust the stock of a specific product based on the provided action (add or subtract) and quantity.
+ *     tags:
+ *       - Product
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the product to manage stock for
+ *       - in: body
+ *         name: stock
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             quantity:
+ *               type: number
+ *               description: The quantity to add or subtract from the stock
+ *             action:
+ *               type: string
+ *               enum: [add, subtract]
+ *               description: The action to perform on stock (either add or subtract)
+ *     responses:
+ *       200:
+ *         description: Product stock updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product stock updated successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 product:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     stock:
+ *                       type: number
+ *                     category:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *       400:
+ *         description: Invalid request parameters (e.g., missing ID, quantity, or invalid action)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Quantity and action are required."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00023"
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product not found."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00052"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "An error occurred."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

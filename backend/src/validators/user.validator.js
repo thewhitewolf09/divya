@@ -57,6 +57,7 @@ export function validateRegister(body) {
       otherwise: Joi.forbidden(), // Not allowed for customers
     }),
     notes: Joi.string().optional(),
+    deviceToken: Joi.string().optional(),
   });
 
   return schema.validate(body);
@@ -67,6 +68,8 @@ export function validateLogin(body) {
     mobile: Joi.string()
       .pattern(/^[0-9]{10}$/) // Assuming a 10-digit phone number; adjust the pattern if needed
       .required(),
+
+    deviceToken: Joi.string().optional(),
   });
   return schema.validate(body);
 }
@@ -112,25 +115,5 @@ export function validateEditUser(body) {
     }).optional(),
   });
 
-  return schema.validate(body);
-}
-
-export function validateShopTiming(body) {
-  const schema = Joi.object({
-    openingTime: Joi.string()
-      .pattern(/^([0-1][0-9]|2[0-3]):([0-5][0-9]) (AM|PM)$/) // Regex for time format "HH:MM AM/PM"
-      .required()
-      .messages({
-        "string.pattern.base": "Opening time must be in the format HH:MM AM/PM",
-        "any.required": "Opening time is required",
-      }),
-    closingTime: Joi.string()
-      .pattern(/^([0-1][0-9]|2[0-3]):([0-5][0-9]) (AM|PM)$/) // Regex for time format "HH:MM AM/PM"
-      .required()
-      .messages({
-        "string.pattern.base": "Closing time must be in the format HH:MM AM/PM",
-        "any.required": "Closing time is required",
-      }),
-  });
   return schema.validate(body);
 }

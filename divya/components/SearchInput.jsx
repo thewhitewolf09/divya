@@ -22,18 +22,21 @@ const SearchInput = ({
           product.name.toLowerCase().includes(searchQuery)
         );
 
-        // Filter customers based on name or phone
+        // Filter customers based on name, mobile, or other relevant fields
         const filteredCustomers = customers.filter(
           (customer) =>
             customer.name.toLowerCase().includes(searchQuery) ||
-            customer.phone.includes(searchQuery) // Also search by phone number
+            customer.mobile.includes(searchQuery) || // Search by mobile number
+            (customer.address && customer.address.city.toLowerCase().includes(searchQuery)) || // Search by city
+            (customer.address && customer.address.state.toLowerCase().includes(searchQuery)) || // Search by state
+            (customer.address && customer.address.country.toLowerCase().includes(searchQuery)) // Search by country
         );
 
         // Combine filtered products and customers into a single result list
         setFilteredResults([...filteredProducts, ...filteredCustomers]);
       } else {
         // If query is empty, clear the results
-        setFilteredResults(customers || products);
+        setFilteredResults([...customers, ...products]);
       }
     }, 300); // Debounce time of 300ms to delay the search
 

@@ -19,6 +19,13 @@ const UserSchema = new mongoose.Schema({
   otpExpiry: {
     type: Date,
   },
+  role: {
+    type: String,
+    default: "shopOwner",
+  },
+  deviceToken: {
+    type: String,
+  },
   isVerified: {
     type: Boolean,
     default: false,

@@ -1,3 +1,107 @@
+/**
+ * @swagger
+ * /api/sales/category/{categoryId}:
+ *   get:
+ *     summary: Retrieve sales by product category
+ *     description: Fetch all sales records for products in the specified category, including total sales and revenue.
+ *     tags:
+ *       - Sales
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "60f2a4c7f1b2c14b8d6d4d9d"  # Example category ID
+ *           description: The ID of the product category
+ *     responses:
+ *       200:
+ *         description: Sales data for the specified category fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Success message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Success code
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalSales:
+ *                       type: integer
+ *                       description: Total number of sales for products in the category
+ *                     totalRevenue:
+ *                       type: number
+ *                       format: float
+ *                       description: Total revenue from sales in the category
+ *                     sales:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             description: The ID of the sale
+ *                           productId:
+ *                             type: object
+ *                             description: Product details related to the sale
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                               name:
+ *                                 type: string
+ *                               price:
+ *                                 type: number
+ *                                 format: float
+ *                           customerId:
+ *                             type: object
+ *                             description: Customer details related to the sale
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                               name:
+ *                                 type: string
+ *                           quantity:
+ *                             type: integer
+ *                             description: Quantity of product sold
+ *                           price:
+ *                             type: number
+ *                             format: float
+ *                             description: Price of the sale
+ *       400:
+ *         description: Missing category ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code
+ */
+
+
+
 import { Product, Sale } from '../../models/index.js';
 import { errorHelper, getText } from '../../utils/index.js';
 

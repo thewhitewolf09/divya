@@ -1,3 +1,99 @@
+/**
+ * @swagger
+ * /api/products/{id}/variants/{variantId}:
+ *   delete:
+ *     summary: Delete a product variant
+ *     description: Delete a specific variant of a product by its variant ID.
+ *     tags:
+ *       - Product
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the product containing the variant to delete
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the variant to delete
+ *     responses:
+ *       200:
+ *         description: Product variant deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Variant deleted successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00092"
+ *                 product:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     variants:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           variantName:
+ *                             type: string
+ *                           variantPrice:
+ *                             type: number
+ *                           variantStockQuantity:
+ *                             type: number
+ *       400:
+ *         description: Invalid request parameters (e.g., missing required details for deletion)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "No id provided in params. Please enter an id."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00022"
+ *       404:
+ *         description: Product or variant not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product or variant not found."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00052"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "An error occurred."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

@@ -1,3 +1,84 @@
+/**
+ * @swagger
+ * /api/users/send-otp:
+ *   post:
+ *     summary: Send an OTP to a user's mobile number for verification.
+ *     description: Searches for a user by mobile number in both User (shop owner) and Customer collections. If found, generates an OTP and sends it to the user's mobile number.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mobile:
+ *                 type: string
+ *                 description: The mobile number of the user requesting the OTP.
+ *                 example: "1234567890"
+ *     responses:
+ *       200:
+ *         description: OTP generated and sent successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "The code is sent to your mobile successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00048"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     mobile:
+ *                       type: string
+ *                       example: "1234567890"
+ *       400:
+ *         description: Mobile number is required.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00039"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Mobile number is required"
+ *       404:
+ *         description: User not found with the provided mobile number.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00052"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "The user or record could not be found."
+ *       500:
+ *         description: Internal server error during OTP generation or user retrieval.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00031"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Internal server error."
+ */
+
+
 import {
   errorHelper,
   getText,

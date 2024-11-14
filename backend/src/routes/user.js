@@ -24,7 +24,5 @@ router.patch("/:id", auth, updateUser);
 router.patch("/:id/shop-timing", auth, updateShopTimings);
 router.delete("/:id", auth, deleteUser);
 
-// EDIT
-router.put("/", auth, imageUpload, updateUser);
 
 export default router;

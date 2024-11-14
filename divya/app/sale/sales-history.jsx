@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,32 +6,81 @@ import {
   FlatList,
   Alert,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import salesJsonData from "./saleData.json";
+import { router, useFocusEffect } from "expo-router";
+import { useDispatch, useSelector } from "react-redux"; // Import hooks from react-redux
+import { deleteSale, getAllSales } from "../../redux/slices/saleSlice";
 
 const SalesHistoryScreen = () => {
-  const [salesData, setSalesData] = useState(salesJsonData);
+  const dispatch = useDispatch(); 
+  const [refreshing, setRefreshing] = useState(false);
+  const { sales, loading, error } = useSelector((state) => state.sale);
 
-  const handleEdit = (productId) => {
-    Alert.alert("Edit Sale", `Edit sale for Product ID: ${productId}`);
+  const fetchSales = async () => {
+    await dispatch(getAllSales());
   };
 
-  const handleDelete = (productId) => {
-    setSalesData((prevData) =>
-      prevData.filter((sale) => sale.product.productId !== productId)
-    );
+  useFocusEffect(
+    useCallback(() => {
+      fetchSales();
+    }, [])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    fetchSales();
+    setRefreshing(false);
+  };
+
+
+
+  const handleDelete = (saleId) => {
     Alert.alert(
-      "Delete Sale",
-      `Sale for Product ID: ${productId} has been deleted.`
+      "Confirm Delete",
+      `Are you sure you want to delete the sale for Product ID: ${saleId}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            try {
+              await dispatch(deleteSale(saleId)).unwrap();
+
+              Alert.alert(
+                "Success",
+                `Sale for Product ID: ${saleId} has been deleted.`
+              );
+            } catch (error) {
+              // Check if error is a string or has a message property
+              const errorMessage =
+                typeof error === "string"
+                  ? error
+                  : error?.resultMessage || "Failed to delete sale.";
+
+              Alert.alert("Error", errorMessage);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
     );
   };
+
+
 
   return (
     <SafeAreaView className="bg-white h-full">
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View className="flex flex-col my-3 px-4 space-y-6">
           <View className="flex-row items-center mb-6">
             <TouchableOpacity
@@ -53,14 +102,14 @@ const SalesHistoryScreen = () => {
 
           <View className="mt-6">
             <FlatList
-              data={salesData}
-              keyExtractor={(item) => item.product.productId}
+              data={sales.slice().sort((a, b) => new Date(b.date) - new Date(a.date))}
+              keyExtractor={(item) => item._id}
               renderItem={({ item }) => (
                 <View className="bg-white border border-gray-100 rounded-lg mb-4 shadow-md flex flex-row justify-between items-center p-4">
                   {/* Product Details */}
                   <View className="flex-1 pr-4">
                     <Text className="text-lg font-semibold text-teal-700 mb-1">
-                      {item.product.name}
+                      {item.productId.name}
                     </Text>
                     <Text className="text-gray-600">
                       Quantity: {item.quantity}
@@ -78,33 +127,20 @@ const SalesHistoryScreen = () => {
                     </Text>
                   </View>
 
-                  {/* Edit and Delete Buttons */}
-                  <View className="flex flex-col justify-between">
-                    <TouchableOpacity
-                      onPress={() => handleEdit(item.product.productId)}
-                      className="p-2 bg-teal-100 rounded-full mb-2"
-                    >
-                      <Ionicons
-                        name="create-outline"
-                        size={24}
-                        color="#0d9488"
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => handleDelete(item.product.productId)}
-                      className="p-2 bg-red-100 rounded-full"
-                    >
-                      <Ionicons
-                        name="trash-outline"
-                        size={24}
-                        color="#dc2626"
-                      />
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(item._id)}
+                    className="p-2 bg-red-100 rounded-full"
+                  >
+                    <Ionicons name="trash-outline" size={24} color="#dc2626" />
+                  </TouchableOpacity>
                 </View>
               )}
               contentContainerStyle={{ paddingBottom: 16 }}
+              ListEmptyComponent={() => (
+                <View className="flex items-center justify-center h-64">
+                  <Text className="text-gray-500 text-lg">No Sale History</Text>
+                </View>
+              )}
             />
           </View>
         </View>

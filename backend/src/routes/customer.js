@@ -11,6 +11,7 @@ import {
   getCustomerDetails,
   getOutstandingCredit,
   searchCustomersByName,
+  updateCreditsOfCustomer,
   updateCustomerDetails,
 } from "../controllers/customer/index.js";
 import {
@@ -36,10 +37,11 @@ router.get("/filter/membership-status", filterCustomersByMembershipStatus);
 router.get("/filter/total-purchases", filterCustomersByTotalPurchases);
 router.get("/filter/credit-balance", filterCustomersByCreditBalance);
 router.get("/:id/credit/outstanding", getOutstandingCredit);
+router.patch("/credit/:customerId/payment", auth, updateCreditsOfCustomer);
 
 //membership
 router.get("/:id/daily-items/attendance", getDailyItemAttendance);
-router.patch(
+router.post(
   "/:id/daily-items/:itemName/quantity",
   auth,
   updateDailyItemQuantity

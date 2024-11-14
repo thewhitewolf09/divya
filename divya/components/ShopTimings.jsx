@@ -4,7 +4,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 
-const ShopTimings = ({ userData, onSave, setModalVisible }) => {
+const ShopTimings = ({ user, onSave, setModalVisible }) => {
   const [openingTime, setOpeningTime] = useState(new Date());
   const [closingTime, setClosingTime] = useState(new Date());
   const [showOpeningPicker, setShowOpeningPicker] = useState(false);

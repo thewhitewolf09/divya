@@ -1,4 +1,62 @@
-import { Customer, Product } from "../../models/index.js";
+/**
+ * @swagger
+ * /api/customers/{id}/membership-summary:
+ *   get:
+ *     summary: Fetch the total fee for a customer's membership for a specific month and year
+ *     description: Retrieves the total fee a customer owes for a particular month and year, calculated based on daily attendance records for daily items.
+ *     tags:
+ *       - Membership
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the customer whose membership summary is being fetched.
+ *         schema:
+ *           type: string
+ *           example: "60d5f7f3b6b8f62b8b9f3c6d"
+ *       - name: month
+ *         in: query
+ *         required: true
+ *         description: The month for which the membership summary is being calculated (1-12).
+ *         schema:
+ *           type: integer
+ *           example: 11
+ *       - name: year
+ *         in: query
+ *         required: true
+ *         description: The year for which the membership summary is being calculated.
+ *         schema:
+ *           type: integer
+ *           example: 2024
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the membership summary.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Successfully fetched membership summary."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 totalFee:
+ *                   type: number
+ *                   format: float
+ *                   example: 500.00
+ *       400:
+ *         description: Missing required fields (customer ID, month, or year) or invalid month.
+ *       404:
+ *         description: Customer not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
+import { Customer } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 
 export default async (req, res) => {
@@ -13,14 +71,13 @@ export default async (req, res) => {
   }
 
   try {
-    // Fetch customer details
+    // Fetch customer details with populated dailyItems and itemName
     const customer = await Customer.findById(id)
       .populate("addedBy")
-      .populate({
-        path: "dailyItems.itemName",
-      })
-      .populate("shops");
-      
+      .populate("shops")
+      .populate("dailyItems.itemName") // populate itemName to get price directly
+      .exec();
+
     if (!customer) {
       return res.status(404).json({
         resultMessage: getText("00052"), // Customer not found
@@ -44,26 +101,22 @@ export default async (req, res) => {
     let totalFee = 0;
 
     // Iterate over daily items and calculate the total fee
-    for (const [itemName, itemDetails] of Object.entries(customer.dailyItems)) {
-      if (itemDetails.attendance) {
-        // Fetch the product details to get the price
-        const product = await Product.findOne({ name: itemName });
-        if (product) {
-          const price = product.price;
+    for (const item of customer.dailyItems) {
+      const itemName = item.itemName.name; // get the item name
+      const price = item.itemName.price;   // get the price
 
-          // Sum up the total fee for the month
-          for (const [date, record] of Object.entries(itemDetails.attendance)) {
-            const recordDate = new Date(date);
-            if (recordDate >= startDate && recordDate <= endDate) {
-              totalFee += record.quantity * price;
-            }
-          }
+      // Sum up the total fee for the month's attendance
+      for (const record of item.attendance) {
+        const recordDate = new Date(record.date);
+
+        if (recordDate >= startDate && recordDate <= endDate && record.taken) {
+          totalFee += record.quantity * price;
         }
       }
     }
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
+      resultMessage: getText("00089"), // Success message
       resultCode: "00089",
       totalFee,
     });

@@ -1,3 +1,113 @@
+/**
+ * @swagger
+ * /api/products/bulk:
+ *   patch:
+ *     summary: Bulk update multiple products
+ *     description: Update multiple products in bulk by providing an array of updates with product IDs and the fields to be updated.
+ *     tags:
+ *       - Product
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: The product ID to update
+ *                 name:
+ *                   type: string
+ *                   description: The name of the product (optional)
+ *                 price:
+ *                   type: number
+ *                   description: The price of the product (optional)
+ *                 stockStatus:
+ *                   type: string
+ *                   description: The stock status (optional)
+ *                 active:
+ *                   type: boolean
+ *                   description: Whether the product is active (optional)
+ *                 discounted:
+ *                   type: boolean
+ *                   description: Whether the product is discounted (optional)
+ *     responses:
+ *       200:
+ *         description: Bulk update completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Bulk update completed."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 successes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       success:
+ *                         type: boolean
+ *                       message:
+ *                         type: string
+ *                       example:
+ *                         _id: "605c72ef1532071eec9b68c1"
+ *                         success: true
+ *                         message: "Product updated successfully."
+ *                 failures:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       success:
+ *                         type: boolean
+ *                       message:
+ *                         type: string
+ *                       example:
+ *                         _id: "605c72ef1532071eec9b68c2"
+ *                         success: false
+ *                         message: "Product not found."
+ *       400:
+ *         description: Invalid update data provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Invalid update data provided."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00022"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "An error occurred."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

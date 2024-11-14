@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -16,11 +16,18 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { CustomButton, SearchInput } from "../../components";
 import { useRouter } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
+import { fetchAllCustomers } from "../../redux/slices/customerSlice";
+import { useDispatch, useSelector } from "react-redux";
+import Autocomplete from "react-native-autocomplete-input";
+import { addNewSale } from "../../redux/slices/saleSlice";
 
 const BillGenerationScreen = () => {
+  const dispatch = useDispatch();
+  const { customers, loading, error } = useSelector((state) => state.customer);
+
   const { selectedProducts } = useLocalSearchParams();
   const parsedProducts = JSON.parse(selectedProducts || "[]");
-  const [searchCustomer, setSearchCustomer] = useState("");
+  const [customerQuery, setCustomerQuery] = useState("");
   const [customer, setCustomer] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [products, setProducts] = useState(
@@ -28,48 +35,28 @@ const BillGenerationScreen = () => {
   );
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const router = useRouter();
+  const [isFocused, setIsFocused] = useState(false);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
 
-  const [customerList, setCustomerList] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      phone: "9876543210",
-      totalPurchases: 5000,
-      creditBalance: 1000,
-      address: {
-        city: "Pune",
-        state: "Maharashtra",
-        country: "India",
-      },
-      isActive: true,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      phone: "9123456789",
-      totalPurchases: 3000,
-      creditBalance: 500,
-      address: {
-        city: "Mumbai",
-        state: "Maharashtra",
-        country: "India",
-      },
-      isActive: false,
-    },
-    {
-      id: 3,
-      name: "Alex Johnson",
-      phone: "9988776655",
-      totalPurchases: 7000,
-      creditBalance: 0,
-      address: {
-        city: "Delhi",
-        state: "Delhi",
-        country: "India",
-      },
-      isActive: true,
-    },
-  ]);
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      await dispatch(fetchAllCustomers());
+    };
+
+    fetchCustomers();
+  }, []);
+
+  const handleSearch = (query) => {
+    if (query) {
+      const filtered = customers.filter((item) =>
+        item.name.toLowerCase().includes(customerQuery.toLowerCase())
+      );
+      setFilteredCustomers(filtered);
+    } else {
+      setFilteredCustomers([]);
+    }
+    setCustomerQuery(query); // Update the search input
+  };
 
   const totalAmount = products.reduce((total, product) => {
     const discountPrice =
@@ -77,7 +64,7 @@ const BillGenerationScreen = () => {
     return total + discountPrice * product.quantity;
   }, 0);
 
-  const taxAmount = (totalAmount * 0.18).toFixed(2); // Assuming 18% tax
+  const taxAmount = (totalAmount * 0).toFixed(2); // Assuming 18% tax
   const grandTotal = (parseFloat(totalAmount) + parseFloat(taxAmount)).toFixed(
     2
   );
@@ -85,7 +72,7 @@ const BillGenerationScreen = () => {
   const increaseQuantity = (productId) => {
     setProducts(
       products.map((product) =>
-        product.id === productId
+        product._id === productId
           ? { ...product, quantity: product.quantity + 1 }
           : product
       )
@@ -95,7 +82,7 @@ const BillGenerationScreen = () => {
   const decreaseQuantity = (productId) => {
     setProducts(
       products.map((product) =>
-        product.id === productId && product.quantity > 1
+        product._id === productId && product.quantity > 1
           ? { ...product, quantity: product.quantity - 1 }
           : product
       )
@@ -129,8 +116,50 @@ const BillGenerationScreen = () => {
       );
       return;
     }
-    Alert.alert("Bill Generated", "The bill has been successfully generated.");
-    router.push("/home");
+
+    // Confirm before finalizing the bill
+    Alert.alert(
+      "Confirm Finalization",
+      "Are you sure you want to finalize this bill?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            const saleData = products.map((product) => ({
+              productId: product._id,
+              quantity: product.quantity,
+              price: product.price - (product.price * product.discount) / 100,
+              customerId: customer ? customer._id : null,
+              isCredit: paymentMethod === "credit",
+              creditDetails:
+                paymentMethod === "credit"
+                  ? {
+                      amountOwed: grandTotal,
+                      paymentStatus: "pending",
+                    }
+                  : null,
+            }));
+
+            try {
+              await dispatch(addNewSale(saleData)).unwrap();
+
+              Alert.alert(
+                "Bill Generated",
+                "The bill has been successfully generated."
+              );
+              router.push("/home");
+            } catch (error) {
+              Alert.alert("Error", error || "Failed to generate sale.");
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const generateUPIQRCode = () => {
@@ -156,20 +185,71 @@ const BillGenerationScreen = () => {
 
           {/* Customer Search */}
           <View>
-            <SearchInput
-              customers={customerList}
-              setFilteredResults={setSearchCustomer}
+            <Autocomplete
+              data={filteredCustomers}
+              value={customerQuery}
+              onChangeText={handleSearch}
               placeholder="Search for a customer"
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              flatListProps={{
+                keyExtractor: (item) => item._id,
+                renderItem: ({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setCustomer(item);
+                      setCustomerQuery(item.name);
+                      setFilteredCustomers([]);
+                    }}
+                    className="py-3 px-4 mb-3 mx-1 bg-white rounded-lg shadow-sm flex-row items-center border border-gray-300"
+                  >
+                    <View className="flex-1">
+                      <Text className="text-lg font-semibold text-teal-700">
+                        {item.name}
+                      </Text>
+                      <Text className="text-sm text-gray-500">
+                        {item.mobile}
+                      </Text>
+                      <Text className="text-sm text-gray-400">
+                        {item.address.city}, {item.address.state},{" "}
+                        {item.address.country}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color="gray" />
+                  </TouchableOpacity>
+                ),
+              }}
+              inputContainerStyle={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                height: 64,
+                paddingHorizontal: 16,
+                marginBottom: 12,
+                backgroundColor: "white",
+                borderRadius: 14,
+                borderWidth: 2,
+                borderColor: isFocused ? "#ff9c01" : "#319795",
+              }}
+              listContainerStyle={{
+                position: "absolute",
+                top: 60,
+                left: 0,
+                right: 0,
+                zIndex: 1,
+                padding: 0,
+              }}
             />
+
             {customer ? (
-              // Show the selected customer details and hide the search results
               <View className="py-3 px-4 mb-3 bg-white rounded-lg shadow-sm flex-row items-center border border-gray-300">
                 <View className="flex-1">
                   <Text className="text-lg font-semibold text-teal-700">
                     {customer.name}
                   </Text>
                   <Text className="text-sm text-gray-500">
-                    {customer.phone}
+                    {customer.mobile}
                   </Text>
                   <Text className="text-sm text-gray-400">
                     {customer.address.city}, {customer.address.state},{" "}
@@ -179,43 +259,9 @@ const BillGenerationScreen = () => {
                 <Ionicons name="chevron-forward" size={24} color="gray" />
               </View>
             ) : (
-              // Show the search results if no customer is selected
-              <>
-                {searchCustomer ? (
-                  <FlatList
-                    data={searchCustomer}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        onPress={() => setCustomer(item)}
-                        className="py-3 px-4 mb-3 bg-white rounded-lg shadow-sm flex-row items-center border border-gray-300"
-                      >
-                        <View className="flex-1">
-                          <Text className="text-lg font-semibold text-teal-700">
-                            {item.name}
-                          </Text>
-                          <Text className="text-sm text-gray-500">
-                            {item.phone}
-                          </Text>
-                          <Text className="text-sm text-gray-400">
-                            {item.address.city}, {item.address.state},{" "}
-                            {item.address.country}
-                          </Text>
-                        </View>
-                        <Ionicons
-                          name="chevron-forward"
-                          size={24}
-                          color="gray"
-                        />
-                      </TouchableOpacity>
-                    )}
-                  />
-                ) : (
-                  <Text className="text-gray-600 italic text-sm mt-2">
-                    No customer selected, billing for an unnamed customer.
-                  </Text>
-                )}
-              </>
+              <Text className="text-gray-600 italic text-sm mt-2">
+                No customer selected, billing for an unnamed customer.
+              </Text>
             )}
           </View>
 
@@ -229,11 +275,11 @@ const BillGenerationScreen = () => {
             ) : (
               products.map((product) => (
                 <View
-                  key={product.id}
+                  key={product._id}
                   className="flex-row justify-between items-center border-b py-3"
                 >
                   <Image
-                    source={product.image}
+                    source={{ uri: product.productImage }}
                     style={{ width: 80, height: 80 }}
                     className="rounded-lg mr-4"
                     resizeMode="contain"
@@ -244,14 +290,14 @@ const BillGenerationScreen = () => {
                     </Text>
                     <View className="flex-row items-center mt-2 space-x-2">
                       <TouchableOpacity
-                        onPress={() => decreaseQuantity(product.id)}
+                        onPress={() => decreaseQuantity(product._id)}
                         className="bg-gray-300 rounded px-2"
                       >
                         <Text className="text-lg font-bold">-</Text>
                       </TouchableOpacity>
                       <Text className="text-gray-800">{product.quantity}</Text>
                       <TouchableOpacity
-                        onPress={() => increaseQuantity(product.id)}
+                        onPress={() => increaseQuantity(product._id)}
                         className="bg-gray-300 rounded px-2"
                       >
                         <Text className="text-lg font-bold">+</Text>
@@ -294,7 +340,7 @@ const BillGenerationScreen = () => {
             <View className="h-[1px] bg-gray-300 my-2" />
             <View className="flex-row justify-between items-center mb-2">
               <Text className="text-lg font-medium text-gray-700">
-                Tax (18%)
+                Tax (0%)
               </Text>
               <Text className="text-lg font-bold text-gray-800">
                 ₹{taxAmount}

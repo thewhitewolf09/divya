@@ -25,6 +25,7 @@ const CustomerList = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeSheet, setActiveSheet] = useState(null);
 
+
   // References to control the bottom sheet
   const filterSheetRef = useRef(null);
   const sortSheetRef = useRef(null);
@@ -68,7 +69,6 @@ const CustomerList = () => {
 
   return (
     <SafeAreaView className="bg-white h-full">
-      <Loader isLoading={isLoading} />
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

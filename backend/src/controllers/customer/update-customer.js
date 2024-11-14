@@ -1,3 +1,101 @@
+/**
+ * @swagger
+ * /api/customers/{id}:
+ *   put:
+ *     summary: Update customer details by ID
+ *     description: Allows an authenticated user to update the details of an existing customer by their unique ID. Only the provided fields will be updated.
+ *     tags:
+ *       - Customer
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The unique ID of the customer to be updated.
+ *         schema:
+ *           type: string
+ *           example: "60d60eafefbd070015f19a56"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "John Doe"
+ *               mobile:
+ *                 type: string
+ *                 example: "1234567890"
+ *               email:
+ *                 type: string
+ *                 example: "johndoe@example.com"
+ *               address:
+ *                 type: string
+ *                 example: "123 Street Name, City, Country"
+ *               notes:
+ *                 type: string
+ *                 example: "Customer notes here"
+ *               membershipStatus:
+ *                 type: string
+ *                 example: "Active"
+ *               creditBalance:
+ *                 type: number
+ *                 example: 5000
+ *               whatsappNumber:
+ *                 type: string
+ *                 example: "0987654321"
+ *     responses:
+ *       200:
+ *         description: Successfully updated customer details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Customer updated successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 customer:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "60d60eafefbd070015f19a56"
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     mobile:
+ *                       type: string
+ *                       example: "1234567890"
+ *                     email:
+ *                       type: string
+ *                       example: "johndoe@example.com"
+ *                     address:
+ *                       type: string
+ *                       example: "123 Street Name, City, Country"
+ *                     membershipStatus:
+ *                       type: string
+ *                       example: "Active"
+ *                     creditBalance:
+ *                       type: number
+ *                       example: 5000
+ *                     whatsappNumber:
+ *                       type: string
+ *                       example: "0987654321"
+ *       400:
+ *         description: Invalid customer ID or missing required data.
+ *       404:
+ *         description: Customer not found with the given ID.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
 import { Customer } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

@@ -230,22 +230,22 @@ export const fetchDailyItemAttendance = createAsyncThunk(
 // Record daily item attendance
 export const recordDailyItemAttendance = createAsyncThunk(
   "membership/recordDailyItemAttendance",
-  async ({ id, itemName }, { getState, rejectWithValue }) => {
+  async ({ id, itemName, date, quantity }, { getState, rejectWithValue }) => {
     const state = getState();
     const token = getToken(state);
     try {
       const response = await api.post(
         `/api/customers/${id}/daily-items/${itemName}/attendance`,
-        {},
+        { date, quantity },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data.attendance;
+      return response.data.customer;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response.data.resultMessage);
     }
   }
 );
@@ -257,7 +257,7 @@ export const updateDailyItemQuantity = createAsyncThunk(
     const state = getState();
     const token = getToken(state);
     try {
-      const response = await api.patch(
+      const response = await api.post(
         `/api/customers/${id}/daily-items/${itemName}/quantity`,
         { quantity },
         {
@@ -266,9 +266,9 @@ export const updateDailyItemQuantity = createAsyncThunk(
           },
         }
       );
-      return response.data.updatedItem;
+      return response.data.customer;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response.data.resultMessage);
     }
   }
 );
@@ -303,7 +303,6 @@ export const removeDailyItemForCustomer = createAsyncThunk(
     const state = getState();
     const token = getToken(state);
     try {
-      console.log({ id, itemName });
       const response = await api.delete(
         `/api/customers/${id}/daily-items/${itemName}`,
         {
@@ -312,10 +311,31 @@ export const removeDailyItemForCustomer = createAsyncThunk(
           },
         }
       );
-      console.log(response.data);
       return response.data.customer;
     } catch (error) {
-      console.error(error);
+      return rejectWithValue(error.response.data.resultMessage);
+    }
+  }
+);
+
+// Update credits of Customer
+export const updateCreditsOfCustomer = createAsyncThunk(
+  "sales/updateCreditsOfCustomer",
+  async ({ customerId, paymentData }, { getState, rejectWithValue }) => {
+    const state = getState();
+    const token = getToken(state);
+    try {
+      const response = await api.patch(
+        `/api/customers/credit/${customerId}/payment`,
+        paymentData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data.customer;
+    } catch (error) {
       return rejectWithValue(error.response.data.resultMessage);
     }
   }
@@ -533,11 +553,14 @@ const customerSlice = createSlice({
       })
       .addCase(recordDailyItemAttendance.fulfilled, (state, action) => {
         state.loading = false;
-        const updatedItem = state.dailyItems.find(
-          (item) => item.name === action.payload.name
+        state.customer = action.payload;
+        const updatedCustomerIndex = state.customers.findIndex(
+          (customer) => customer._id === action.payload._id
         );
-        if (updatedItem) {
-          updatedItem.attendance = action.payload.attendance;
+        if (updatedCustomerIndex !== -1) {
+          state.customers[updatedCustomerIndex] = action.payload;
+        } else {
+          state.customers.push(action.payload);
         }
       })
       .addCase(recordDailyItemAttendance.rejected, (state, action) => {
@@ -551,12 +574,7 @@ const customerSlice = createSlice({
       })
       .addCase(updateDailyItemQuantity.fulfilled, (state, action) => {
         state.loading = false;
-        const updatedItem = state.dailyItems.find(
-          (item) => item.name === action.payload.name
-        );
-        if (updatedItem) {
-          updatedItem.quantity = action.payload.quantity;
-        }
+        state.customer = action.payload;
       })
       .addCase(updateDailyItemQuantity.rejected, (state, action) => {
         state.loading = false;
@@ -582,9 +600,31 @@ const customerSlice = createSlice({
       })
       .addCase(removeDailyItemForCustomer.fulfilled, (state, action) => {
         state.loading = false;
-        state.customer = action.payload;  
+        state.customer = action.payload;
       })
       .addCase(removeDailyItemForCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Update credit sale payment
+      .addCase(updateCreditsOfCustomer.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateCreditsOfCustomer.fulfilled, (state, action) => {
+        state.loading = false;
+        state.customer = action.payload;
+
+        const updatedCustomerIndex = state.customers.findIndex(
+          (customer) => customer._id === action.payload._id
+        );
+        if (updatedCustomerIndex !== -1) {
+          state.customers[updatedCustomerIndex] = action.payload;
+        } else {
+          state.customers.push(action.payload);
+        }
+      })
+      .addCase(updateCreditsOfCustomer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

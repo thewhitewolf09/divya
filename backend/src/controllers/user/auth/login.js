@@ -1,3 +1,89 @@
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: User login with OTP generation
+ *     description: Validates the user's mobile number and generates an OTP for login. The OTP is stored in the database and is valid for 10 minutes.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mobile:
+ *                 type: string
+ *                 description: The mobile number of the user.
+ *                 example: "1234567890"
+ *               deviceToken:
+ *                 type: string
+ *                 description: The device token for push notifications.
+ *                 example: "device_token_example"
+ *     responses:
+ *       200:
+ *         description: OTP successfully generated and sent to the user's mobile.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "The code is sent to your mobile successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00048"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     mobile:
+ *                       type: string
+ *                       example: "1234567890"
+ *       400:
+ *         description: Validation error with the provided mobile number or device token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00038"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Invalid mobile number format."
+ *       404:
+ *         description: User not found in either User or Customer collection.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00042"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "User not found."
+ *       500:
+ *         description: Internal server error during the process.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorCode:
+ *                   type: string
+ *                   example: "00041"
+ *                 errorMessage:
+ *                   type: string
+ *                   example: "Internal server error."
+ */
+
+
+
 import { User, Customer } from "../../../models/index.js";
 import { validateLogin } from "../../../validators/user.validator.js";
 import {
@@ -19,7 +105,7 @@ export default async (req, res) => {
       .json(errorHelper(code, req, error.details[0].message));
   }
 
-  const { mobile } = req.body;
+  const { mobile, deviceToken } = req.body;
 
   let user;
 
@@ -41,6 +127,7 @@ export default async (req, res) => {
   const otp = generateOTP();
   user.otp = otp;
   user.otpExpiry = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+  user.deviceToken = deviceToken;
 
   await user.save().catch((err) => {
     return res.status(500).json(errorHelper("00034", req, err.message));

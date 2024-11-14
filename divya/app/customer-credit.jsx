@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -7,226 +7,33 @@ import {
   ScrollView,
   FlatList,
   Alert,
+  TextInput,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SearchInput } from "../components"; // Assuming you have a search component
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchAllCustomers,
+  updateCreditsOfCustomer,
+} from "../redux/slices/customerSlice";
 
 const CustomerCreditScreen = () => {
+  const dispatch = useDispatch();
+  const { customers, loading, error } = useSelector((state) => state.customer);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [partialPayment, setPartialPayment] = useState(""); // State for partial payment
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
 
-  const [customerList, setCustomerList] = useState([
-    {
-      name: "John Doe",
-      phone: "8303088493",
-      whatsappNumber: "8303088493",
-      address: {
-        street: "123 Main St",
-        city: "Mumbai",
-        state: "Maharashtra",
-        postalCode: "400001",
-        country: "India",
-      },
-      isActive: true,
-      membershipStatus: "active",
-      dailyItems: {
-        Milk: {
-          quantityPerDay: 1,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 1, price: 50 },
-            "2024-09-21": { taken: false, quantity: 0, price: 0 },
-            "2024-09-22": { taken: true, quantity: 1, price: 50 },
-            "2024-09-23": { taken: true, quantity: 1, price: 50 },
-          },
-        },
-        BadamJuice: {
-          quantityPerDay: 1,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 1, price: 50 },
-            "2024-09-21": { taken: false, quantity: 0, price: 0 },
-            "2024-09-22": { taken: true, quantity: 1, price: 50 },
-            "2024-09-23": { taken: false, quantity: 0, price: 0 },
-          },
-        },
-        Paneer: {
-          quantityPerDay: 0.5,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 0.5, price: 70 },
-            "2024-09-21": { taken: true, quantity: 0.5, price: 70 },
-            "2024-09-22": { taken: false, quantity: 0, price: 0 },
-            "2024-09-23": { taken: true, quantity: 0.5, price: 70 },
-          },
-        },
-        Fruits: {
-          quantityPerDay: 2,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 2, price: 30 },
-            "2024-09-21": { taken: true, quantity: 2, price: 30 },
-            "2024-09-22": { taken: true, quantity: 2, price: 30 },
-            "2024-09-23": { taken: false, quantity: 0, price: 0 },
-            "2024-09-24": { taken: true, quantity: 2, price: 30 },
-            "2024-09-25": { taken: true, quantity: 2, price: 30 },
-            "2024-09-26": { taken: true, quantity: 2, price: 30 },
-            "2024-09-27": { taken: false, quantity: 0, price: 0 },
-            "2024-09-28": { taken: true, quantity: 2, price: 30 },
-            "2024-09-29": { taken: true, quantity: 2, price: 30 },
-            "2024-09-30": { taken: true, quantity: 2, price: 30 },
-            "2024-09-31": { taken: false, quantity: 0, price: 0 },
-          },
-        },
-      },
-      totalPurchases: 5000,
-      registrationDate: "2023-09-01",
-      creditBalance: 300,
-    },
-    {
-      name: "Jane Smith",
-      phone: "9123456789",
-      whatsappNumber: "9123456789",
-      address: {
-        street: "456 Elm St",
-        city: "Pune",
-        state: "Maharashtra",
-        postalCode: "411001",
-        country: "India",
-      },
-      isActive: true,
-      membershipStatus: "active",
-      dailyItems: {
-        Milk: {
-          quantityPerDay: 1,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 1, price: 50 },
-            "2024-09-21": { taken: true, quantity: 1, price: 50 },
-            "2024-09-22": { taken: true, quantity: 1, price: 50 },
-            "2024-09-23": { taken: false, quantity: 0, price: 0 },
-          },
-        },
-        Fruits: {
-          quantityPerDay: 3,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 3, price: 90 },
-            "2024-09-21": { taken: true, quantity: 3, price: 90 },
-            "2024-09-22": { taken: false, quantity: 0, price: 0 },
-            "2024-09-23": { taken: true, quantity: 3, price: 90 },
-          },
-        },
-      },
-      totalPurchases: 3000,
-      registrationDate: "2023-09-05",
-      creditBalance: 150,
-    },
-    {
-      name: "Raj Patel",
-      phone: "9876543210",
-      whatsappNumber: "9876543210",
-      address: {
-        street: "789 Pine St",
-        city: "Delhi",
-        state: "Delhi",
-        postalCode: "110001",
-        country: "India",
-      },
-      isActive: true,
-      membershipStatus: "active",
-      dailyItems: {
-        Paneer: {
-          quantityPerDay: 1,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 1, price: 70 },
-            "2024-09-21": { taken: false, quantity: 0, price: 0 },
-            "2024-09-22": { taken: true, quantity: 1, price: 70 },
-            "2024-09-23": { taken: true, quantity: 1, price: 70 },
-          },
-        },
-        BadamJuice: {
-          quantityPerDay: 2,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 2, price: 100 },
-            "2024-09-21": { taken: true, quantity: 2, price: 100 },
-            "2024-09-22": { taken: true, quantity: 2, price: 100 },
-            "2024-09-23": { taken: false, quantity: 0, price: 0 },
-          },
-        },
-      },
-      totalPurchases: 7000,
-      registrationDate: "2023-09-10",
-      creditBalance: 200,
-    },
-    {
-      name: "Anita Rao",
-      phone: "9988776655",
-      whatsappNumber: "9988776655",
-      address: {
-        street: "321 Maple St",
-        city: "Bangalore",
-        state: "Karnataka",
-        postalCode: "560001",
-        country: "India",
-      },
-      isActive: true,
-      membershipStatus: "inactive",
-      dailyItems: {
-        Fruits: {
-          quantityPerDay: 5,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 5, price: 150 },
-            "2024-09-21": { taken: true, quantity: 5, price: 150 },
-            "2024-09-22": { taken: true, quantity: 5, price: 150 },
-            "2024-09-23": { taken: true, quantity: 5, price: 150 },
-          },
-        },
-      },
-      totalPurchases: 4500,
-      registrationDate: "2023-09-15",
-      creditBalance: 50,
-    },
-    {
-      name: "Karan Singh",
-      phone: "9876543211",
-      whatsappNumber: "9876543211",
-      address: {
-        street: "654 Oak St",
-        city: "Chennai",
-        state: "Tamil Nadu",
-        postalCode: "600001",
-        country: "India",
-      },
-      isActive: true,
-      membershipStatus: "active",
-      dailyItems: {
-        Milk: {
-          quantityPerDay: 1,
-          attendance: {
-            "2024-09-20": { taken: false, quantity: 0, price: 0 },
-            "2024-09-21": { taken: true, quantity: 1, price: 50 },
-            "2024-09-22": { taken: true, quantity: 1, price: 50 },
-            "2024-09-23": { taken: true, quantity: 1, price: 50 },
-          },
-        },
-        Paneer: {
-          quantityPerDay: 0.5,
-          attendance: {
-            "2024-09-20": { taken: true, quantity: 0.5, price: 70 },
-            "2024-09-21": { taken: false, quantity: 0, price: 0 },
-            "2024-09-22": { taken: true, quantity: 0.5, price: 70 },
-            "2024-09-23": { taken: true, quantity: 0.5, price: 70 },
-          },
-        },
-      },
-      totalPurchases: 3200,
-      registrationDate: "2023-09-20",
-      creditBalance: 100,
-    },
-  ]);
-
   const [searchCustomer, setSearchCustomer] = useState(
-    customerList.filter((customer) => customer.creditBalance > 0)
+    customers.filter((customer) => customer?.creditBalance > 0)
   );
 
   const openModal = (customer) => {
@@ -237,14 +44,48 @@ const CustomerCreditScreen = () => {
   const closeModal = () => {
     setModalVisible(false);
     setSelectedCustomer(null);
+    setPartialPayment(""); // Reset partial payment when modal closes
   };
 
-  const sendReminder = (selectedCustomer) => {
-    alert(`Reminder sent to ${selectedCustomer.name}`);
+  const sendReminder = async (selectedCustomer) => {
+    if (!selectedCustomer.deviceToken) {
+      alert("No push token available for this customer.");
+      return;
+    }
+
+    const message = {
+      to: selectedCustomer.deviceToken,
+      sound: "default",
+      title: `Reminder for ${selectedCustomer.name}`,
+      body: `Hello ${selectedCustomer.name}, just a reminder!`,
+      data: { customData: "any data", targetScreen: "/notifications" }, 
+    };
+
+    try {
+      const response = await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Accept-encoding": "gzip, deflate",
+        },
+        body: JSON.stringify(message),
+      });
+
+
+      if (response.ok) {
+        
+        alert(`Reminder sent to ${selectedCustomer.name}`);
+      } else {
+        alert(`Failed to send reminder to ${selectedCustomer.name}`);
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      alert("An error occurred while sending the reminder.");
+    }
   };
 
   const remindAllCustomers = () => {
-    // searchCustomer.forEach((customer) => sendReminder(customer));
     alert("Reminders sent to all customers with outstanding udhar.");
   };
 
@@ -256,15 +97,55 @@ const CustomerCreditScreen = () => {
         "Please select a customer for credit payment."
       );
     } else if (method === "online") {
-      setShowQRCodeModal(true); // Ensure `setShowQRCodeModal` is defined if you're using it
+      setShowQRCodeModal(true);
     }
   };
 
   const recordPayment = () => {
-    // Logic to record payment based on selectedPayment
-    // For example, decrease credit balance if payment method is credit
-    alert("Payment recorded");
-    closeModal();
+    if (!partialPayment || parseFloat(partialPayment) <= 0) {
+      Alert.alert(
+        "Invalid Payment",
+        "Please enter a valid partial payment amount."
+      );
+      return;
+    }
+
+    if (parseFloat(partialPayment) > selectedCustomer.creditBalance) {
+      Alert.alert(
+        "Invalid Payment",
+        "Partial payment cannot exceed total udhar."
+      );
+      return;
+    }
+
+    // Calculate updated balance and determine payment status
+    const updatedBalance =
+      selectedCustomer.creditBalance - parseFloat(partialPayment);
+    const paymentStatus = updatedBalance === 0 ? "paid" : "partially_paid";
+
+    // Construct payment data
+    const paymentData = {
+      paymentStatus,
+      amountPaid: parseFloat(partialPayment),
+    };
+
+    // Dispatch the updateCreditsOfCustomer action with customerId and paymentData
+    dispatch(
+      updateCreditsOfCustomer({ customerId: selectedCustomer._id, paymentData })
+    )
+      .unwrap()
+      .then((updatedCustomer) => {
+        // Retrieve the updated customer from the response and show remaining balance
+        Alert.alert(
+          "Payment Recorded",
+          `₹${partialPayment} has been paid. Remaining balance: ₹${updatedCustomer.creditBalance}`
+        );
+        closeModal(); // Close the modal after successful payment
+      })
+      .catch((error) => {
+        // Show error if the payment update fails
+        Alert.alert("Error", error);
+      });
   };
 
   const generateUPIQRCode = () => {
@@ -281,7 +162,7 @@ const CustomerCreditScreen = () => {
         <Text className="text-lg font-semibold text-teal-700">
           {customer.name}
         </Text>
-        <Text className="text-sm text-gray-500">{customer.phone}</Text>
+        <Text className="text-sm text-gray-500">{customer.mobile}</Text>
         <Text className="text-sm text-gray-400">
           {customer.address.city}, {customer.address.state},{" "}
           {customer.address.country}
@@ -294,9 +175,30 @@ const CustomerCreditScreen = () => {
     </TouchableOpacity>
   );
 
+  const fetchCustomers = async () => {
+    await dispatch(fetchAllCustomers());
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCustomers();
+    }, [])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCustomers();
+    setRefreshing(false);
+  };
+
   return (
     <SafeAreaView className="bg-white h-full">
-      <ScrollView className="p-4">
+      <ScrollView
+        className="p-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View className="flex-row items-center mb-6">
           <TouchableOpacity
             onPress={() => {
@@ -317,20 +219,16 @@ const CustomerCreditScreen = () => {
 
         {/* Search Input */}
         <SearchInput
-          customers={customerList.filter(
-            (customer) => customer.creditBalance > 0
-          )}
+          customers={customers.filter((customer) => customer.creditBalance > 0)}
           setFilteredResults={setSearchCustomer}
           placeholder="Search for a customer"
         />
 
-        <View className="flex flex-row justify-between items-center my-4 ">
-          {/* Customers Count */}
+        <View className="flex flex-row justify-between items-center my-4">
           <Text className="text-gray-800 font-semibold text-lg">
             {searchCustomer.length} Customers
           </Text>
 
-          {/* Filter & Sort Buttons */}
           <View className="flex flex-row space-x-3">
             <TouchableOpacity
               className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
@@ -352,7 +250,6 @@ const CustomerCreditScreen = () => {
           </View>
         </View>
 
-        {/* Customer List using FlatList */}
         {searchCustomer.length > 0 ? (
           <FlatList
             data={searchCustomer}
@@ -373,18 +270,15 @@ const CustomerCreditScreen = () => {
           <Modal visible={isModalVisible} transparent animationType="slide">
             <View className="flex-1 justify-center items-center bg-gray-800 bg-opacity-50">
               <View className="bg-white p-8 rounded-lg shadow-lg max-h-[90%] w-[90%]">
-                {/* Modal Title */}
                 <Text className="text-teal-700 font-semibold text-xl mb-6 text-center">
                   Manage Udhar for {selectedCustomer.name}
                 </Text>
 
                 <ScrollView showsVerticalScrollIndicator={false}>
-                  {/* Total Udhar Display */}
                   <Text className="text-3xl font-bold text-gray-800 mb-8 text-center">
                     Total Udhar: ₹{selectedCustomer.creditBalance}
                   </Text>
 
-                  {/* Payment Method Selection */}
                   <View className="mb-8">
                     <Text className="text-lg font-semibold text-gray-800 mb-4">
                       Payment Method
@@ -412,17 +306,40 @@ const CustomerCreditScreen = () => {
                       ))}
                     </View>
                   </View>
-                  {/* Record Payment Button */}
+
+                  {paymentMethod !== "" ? (
+                    <View className="mb-8">
+                      <Text className="text-lg font-semibold text-gray-800 mb-4">
+                        Enter Partial Payment Amount
+                      </Text>
+                      <TextInput
+                        value={partialPayment}
+                        onChangeText={setPartialPayment}
+                        keyboardType="numeric"
+                        placeholder="Enter amount"
+                        className="border border-gray-300 rounded-lg p-4 text-lg"
+                      />
+                    </View>
+                  ) : null}
+
                   <TouchableOpacity
-                    className="mt-6 bg-green-600 p-4 rounded-lg shadow-lg transition-transform transform active:scale-95"
-                    onPress={recordPayment} // Call your new recordPayment function
+                    className={`mt-6 p-4 rounded-lg shadow-lg transition-transform transform active:scale-95 ${
+                      loading ? "bg-gray-400" : "bg-green-600"
+                    }`}
+                    onPress={!loading ? recordPayment : null} // Disable button if loading
+                    disabled={loading} // Disable button if loading
                   >
-                    <Text className="text-white text-center text-lg font-semibold">
-                      Record Payment
-                    </Text>
+                    {loading ? (
+                      <Text className="text-white text-center text-lg font-semibold">
+                        Recording...
+                      </Text>
+                    ) : (
+                      <Text className="text-white text-center text-lg font-semibold">
+                        Record Payment
+                      </Text>
+                    )}
                   </TouchableOpacity>
 
-                  {/* Send SMS Reminder Button */}
                   <TouchableOpacity
                     className="mt-4 bg-orange-600 p-4 rounded-lg shadow-lg transition-transform transform active:scale-95 flex-row items-center justify-center"
                     onPress={() => {
@@ -478,7 +395,6 @@ const CustomerCreditScreen = () => {
                     </View>
                   </Modal>
 
-                  {/* Close Modal Button */}
                   <TouchableOpacity
                     className="mt-6 bg-gray-600 p-4 rounded-lg"
                     onPress={closeModal}

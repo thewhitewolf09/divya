@@ -58,6 +58,24 @@ const TabLayout = () => {
             ),
           }}
         />
+
+        <Tabs.Screen
+          name="orders"
+          options={{
+            title: "Orders",
+            headerShown: false,
+            href: user?.role === "shopOwner" ? "/orders" : null,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                iconName="list-outline"
+                color={color}
+                name="Orders"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+
         <Tabs.Screen
           name="products"
           options={{
@@ -80,7 +98,7 @@ const TabLayout = () => {
           options={{
             title: "My Orders",
             headerShown: false,
-            href: user?.role === "customer" ? "/myorders" : null, 
+            href: user?.role === "customer" ? "/myorders" : null,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 iconName="list-outline"
@@ -97,7 +115,7 @@ const TabLayout = () => {
           options={{
             title: "Customers",
             headerShown: false,
-            href: user?.role === "shopOwner" ? "/customers" : null, 
+            href: user?.role === "shopOwner" ? "/customers" : null,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 iconName="people-outline"
@@ -127,7 +145,6 @@ const TabLayout = () => {
       </Tabs>
 
       {/* These components should be outside of Tabs */}
-      <Loader isLoading={loading} />
       <StatusBar backgroundColor="#468585" style="light" />
     </>
   );

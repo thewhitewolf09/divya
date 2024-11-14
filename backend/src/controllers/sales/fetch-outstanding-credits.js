@@ -1,3 +1,77 @@
+/**
+ * @swagger
+ * /api/sales/outstanding:
+ *   get:
+ *     summary: Retrieve a list of outstanding credit sales
+ *     description: Fetch a list of sales that are on credit with a payment status of 'pending' or 'partially_paid'.
+ *     tags:
+ *       - Sales
+ *     responses:
+ *       200:
+ *         description: Outstanding credit sales retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Success message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Success code
+ *                 outstandingCredits:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       saleId:
+ *                         type: string
+ *                         description: The ID of the sale
+ *                       productId:
+ *                         type: string
+ *                         description: The ID of the product sold
+ *                       customerId:
+ *                         type: string
+ *                         description: The ID of the customer
+ *                       creditDetails:
+ *                         type: object
+ *                         properties:
+ *                           paymentStatus:
+ *                             type: string
+ *                             enum:
+ *                               - pending
+ *                               - partially_paid
+ *                             description: The payment status of the credit sale
+ *       404:
+ *         description: No outstanding credit sales found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message indicating no outstanding credit sales were found
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code for no outstanding credit sales
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code for server errors
+ */
+
+
 import { Sale } from '../../models/index.js';
 import { errorHelper, getText } from '../../utils/index.js';
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,82 +12,127 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CustomButton } from "../../components"; // Ensure this path is correct
 import { BarChart, PieChart } from "react-native-chart-kit";
-import salesData from "./saleData.json"; // Assume this contains the new sales data structure
 import { router } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getMonthlySales,
+  getSalesByDateRange,
+} from "../../redux/slices/saleSlice";
 
 const SalesPerformanceScreen = () => {
+  const dispatch = useDispatch();
+  const { sales, loading, error } = useSelector((state) => state.sale);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [topSellingProducts, setTopSellingProducts] = useState([]);
+  const [salesByProduct, setSalesByProduct] = useState({});
+
+
+  useEffect(() => {
+    const fetchMonthlySaleData = async () => {
+      await dispatch(getMonthlySales());
+    };
+
+    fetchMonthlySaleData();
+  }, []);
+
+  useEffect(() => {
+    calculateTopSellingProducts();
+  }, [sales]);
+
+  const fetchDateWiseSaleData = async (startDate, endDate) => {
+    try {
+      // Attempt to fetch the sales data within the date range
+      await dispatch(
+        getSalesByDateRange({
+          startDate: startDate.toLocaleDateString(),
+          endDate: endDate.toLocaleDateString(),
+        })
+      ).unwrap();
+    } catch (error) {
+      // Handle the error here
+      const errorMessage =
+        error?.resultMessage || "An error occurred while fetching sales data.";
+
+      Alert.alert("Error", errorMessage);
+    }
+  };
 
   // Calculate total sales and transactions
-  const totalSales = salesData.reduce(
+  const totalSales = sales.reduce(
     (acc, sale) => acc + sale.price * sale.quantity,
     0
   );
-  const totalTransactions = salesData.length;
+  const totalTransactions = sales.length;
 
   // Calculate metrics
-  const monthlySalesGrowth = "10"; // Replace with actual calculation
+  const monthlySalesGrowth = "10";
+
   const averageOrderValue =
     totalTransactions > 0
       ? (totalSales / totalTransactions).toFixed(2)
       : "0.00";
 
-  // Calculate top-selling products
-  const salesByProduct = {};
-  salesData.forEach((sale) => {
-    const productName = sale.product.name; // Use product.name from your new schema
-    if (!salesByProduct[productName]) {
-      salesByProduct[productName] = {
-        sales: 0,
-        quantity: 0,
-      };
+  // Function to calculate top-selling products
+  const calculateTopSellingProducts = () => {
+    if (!sales || sales.length === 0) {
+      setTopSellingProducts([]);
+      return;
     }
-    salesByProduct[productName].sales += sale.price * sale.quantity;
-    salesByProduct[productName].quantity += sale.quantity;
-  });
 
-  // Convert the salesByProduct object to an array and sort by sales
-  const topSellingProducts = Object.keys(salesByProduct)
-    .map((productName) => ({
-      name: productName,
-      sales: salesByProduct[productName].sales,
-      quantity: salesByProduct[productName].quantity,
-    }))
-    .sort((a, b) => b.sales - a.sales)
-    .slice(0, 5); // Get top 5 products
+    const updatedSalesByProduct = { ...salesByProduct }; // Create a copy of the state object
+
+    sales.forEach((sale) => {
+      const productName = sale.productId?.name;
+      if (!productName) return;
+
+      if (!updatedSalesByProduct[productName]) {
+        updatedSalesByProduct[productName] = {
+          sales: 0,
+          quantity: 0,
+        };
+      }
+      updatedSalesByProduct[productName].sales += sale.price * sale.quantity;
+      updatedSalesByProduct[productName].quantity += sale.quantity;
+    });
+
+    setSalesByProduct(updatedSalesByProduct); // Update the state with the modified object
+
+    const topProducts = Object.keys(updatedSalesByProduct)
+      .map((productName) => ({
+        name: productName,
+        sales: updatedSalesByProduct[productName].sales,
+        quantity: updatedSalesByProduct[productName].quantity,
+      }))
+      .sort((a, b) => b.sales - a.sales)
+      .slice(0, 5);
+
+    setTopSellingProducts(topProducts);
+  };
 
   // Sales by payment method
-  const cashSales = salesData.filter((sale) => !sale.isCredit);
-  const creditSales = salesData.filter((sale) => sale.isCredit);
+  const cashSales = sales.filter((sale) => !sale.isCredit);
+  const creditSales = sales.filter((sale) => sale.isCredit);
 
   const cashBalance = cashSales.reduce(
     (acc, sale) => acc + sale.price * sale.quantity,
     0
   );
-  const onlineBalance = creditSales.reduce(
+  const creditBalance = creditSales.reduce(
     (acc, sale) => acc + sale.price * sale.quantity,
     0
   );
-  const creditBalance = onlineBalance; // Assuming credit sales are equal to the balance owed
   const totalBalance = cashBalance + creditBalance;
 
   // Pie Chart data
   const pieData = [
     {
-      name: "Cash",
+      name: "Cash/Online",
       population: cashSales.length,
       color: "#28A745", // Green for cash
       legendFontColor: "#28A745",
-      legendFontSize: 15,
-    },
-    {
-      name: "Online",
-      population: salesData.length - (cashSales.length + creditSales.length),
-      color: "#007BFF", // Blue for online
-      legendFontColor: "#007BFF",
       legendFontSize: 15,
     },
     {
@@ -191,7 +236,7 @@ const SalesPerformanceScreen = () => {
             {/* Fetch Sales Data Button */}
             <CustomButton
               title="Fetch Sales Data"
-              handlePress={() => alert("Button clicked")}
+              handlePress={() => fetchDateWiseSaleData(startDate, endDate)}
               containerStyles="mt-2"
             />
           </View>
@@ -247,19 +292,26 @@ const SalesPerformanceScreen = () => {
               </Text>
 
               <View className="bg-gray-50 p-4 rounded-lg shadow-lg">
-                {topSellingProducts.map((product, index) => (
-                  <View
-                    key={index}
-                    className="flex-row justify-between items-center p-3 mb-2 bg-white rounded-lg shadow-md border border-gray-200"
-                  >
-                    <Text className="text-md text-teal-700 font-semibold">
-                      {index + 1}. {product.name}
-                    </Text>
-                    <Text className="text-md text-teal-700 font-semibold">
-                      {product.sales.toFixed(2)} INR
-                    </Text>
-                  </View>
-                ))}
+                {topSellingProducts.length === 0 ? (
+                  <Text>
+                    No top-selling products available for the selected date
+                    range.
+                  </Text>
+                ) : (
+                  topSellingProducts.map((product, index) => (
+                    <View
+                      key={index}
+                      className="flex-row justify-between items-center p-3 mb-2 bg-white rounded-lg shadow-md border border-gray-200"
+                    >
+                      <Text className="text-md text-teal-700 font-semibold">
+                        {index + 1}. {product.name}
+                      </Text>
+                      <Text className="text-md text-teal-700 font-semibold">
+                        {product.sales.toFixed(2)} INR
+                      </Text>
+                    </View>
+                  ))
+                )}
 
                 <Text className="text-sm text-gray-600 mt-2">
                   Top 5 products sold in the selected period.
@@ -308,7 +360,7 @@ const SalesPerformanceScreen = () => {
               {/* Cash Sales Card */}
               <View className="bg-teal-100 p-4 rounded-lg shadow-md border border-teal-300">
                 <Text className="text-md font-semibold text-teal-700">
-                  Total Cash Sales
+                  Total Cash/Online Sales
                 </Text>
                 <Text className="text-xl font-bold text-teal-800">
                   {cashBalance.toFixed(2)} INR
@@ -322,16 +374,6 @@ const SalesPerformanceScreen = () => {
                 </Text>
                 <Text className="text-xl font-bold text-teal-800">
                   {creditBalance.toFixed(2)} INR
-                </Text>
-              </View>
-
-              {/* Online Sales Card */}
-              <View className="bg-blue-100 p-4 rounded-lg shadow-md border border-blue-300">
-                <Text className="text-md font-semibold text-teal-700">
-                  Total Online Sales
-                </Text>
-                <Text className="text-xl font-bold text-teal-800">
-                  {onlineBalance.toFixed(2)} INR
                 </Text>
               </View>
 
@@ -354,10 +396,10 @@ const SalesPerformanceScreen = () => {
             </Text>
             <BarChart
               data={{
-                labels: ["Cash", "Credit", "Online"],
+                labels: ["Cash/Online", "Credit"],
                 datasets: [
                   {
-                    data: [cashBalance, creditBalance, onlineBalance],
+                    data: [cashBalance, creditBalance],
                   },
                 ],
               }}

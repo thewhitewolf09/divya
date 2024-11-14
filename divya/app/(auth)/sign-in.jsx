@@ -20,6 +20,7 @@ import {
   sendOtpUser,
   verifyOtpUser,
 } from "../../redux/slices/userSlice";
+import { useNotifications } from "../../notification/notification";
 
 const SignIn = () => {
   const dispatch = useDispatch();
@@ -31,6 +32,9 @@ const SignIn = () => {
     mobileNumber: "",
     otp: "",
   });
+
+  const { expoPushToken } = useNotifications();
+
 
   const [timer, setTimer] = useState(15); // Resend OTP timer
   const [canResend, setCanResend] = useState(false);
@@ -56,7 +60,9 @@ const SignIn = () => {
 
     setSubmitting(true);
     try {
-      await dispatch(loginUser(form.mobileNumber)).unwrap(); // Dispatch OTP request
+      await dispatch(
+        loginUser({ mobile: form.mobileNumber, deviceToken: expoPushToken })
+      ).unwrap(); // Dispatch OTP request
       Alert.alert("Success", "OTP sent to your mobile number");
       setOtpSent(true);
       setTimer(15); // Reset the timer for resending OTP

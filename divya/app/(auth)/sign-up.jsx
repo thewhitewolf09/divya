@@ -21,12 +21,15 @@ import {
   signupUser,
   verifyOtpUser,
 } from "../../redux/slices/userSlice";
+import { useNotifications } from "../../notification/notification";
 
 const SignUp = () => {
   const dispatch = useDispatch();
   const { loading, isLogged, verified, error } = useSelector(
     (state) => state.user
   );
+
+  const { expoPushToken } = useNotifications();
 
   const [form, setForm] = useState({
     name: "",
@@ -177,7 +180,7 @@ const SignUp = () => {
     }
 
     // Dispatch Sign-Up Action
-    dispatch(signupUser(signUpData))
+    dispatch(signupUser({ signUpData, deviceToken: expoPushToken }))
       .unwrap()
       .then(() => {
         setOtpSent(true);

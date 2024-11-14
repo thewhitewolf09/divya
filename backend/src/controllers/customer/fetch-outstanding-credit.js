@@ -1,3 +1,60 @@
+/**
+ * @swagger
+ * /api/customers/{id}/credit/outstanding:
+ *   get:
+ *     summary: Get outstanding credit for a customer
+ *     description: Retrieves the outstanding credit transactions for a customer based on their ID, where the credit payment status is either "pending" or "partially_paid".
+ *     tags:
+ *       - Customer
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the customer for whom the outstanding credit transactions are to be fetched.
+ *         schema:
+ *           type: string
+ *           example: "60d5f7f3b6b8f62b8b9f3c6d"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved outstanding credit transactions for the customer.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Successfully retrieved outstanding credits."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 outstandingCredits:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       saleId:
+ *                         type: string
+ *                         example: "60d5f7f3b6b8f62b8b9f3c6d"
+ *                       amount:
+ *                         type: number
+ *                         example: 1000
+ *                       dueDate:
+ *                         type: string
+ *                         example: "2024-11-30"
+ *                       paymentStatus:
+ *                         type: string
+ *                         example: "pending"
+ *       400:
+ *         description: Missing or invalid customer ID.
+ *       404:
+ *         description: Customer not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
+
 import { Customer, Sale } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

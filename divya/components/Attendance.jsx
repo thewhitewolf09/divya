@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Calendar } from "react-native-calendars"; // Calendar component
 import { Ionicons } from "@expo/vector-icons";
@@ -15,10 +16,12 @@ import { fetchAllProducts } from "../redux/slices/productSlice";
 import Autocomplete from "react-native-autocomplete-input";
 import {
   addDailyItemForCustomer,
+  recordDailyItemAttendance,
   removeDailyItemForCustomer,
+  updateDailyItemQuantity,
 } from "../redux/slices/customerSlice";
 
-const Attendance = ({ customer }) => {
+const Attendance = ({ customer, onRefresh }) => {
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector((state) => state.product);
   const [productList, setProductList] = useState(products);
@@ -27,9 +30,9 @@ const Attendance = ({ customer }) => {
   const [isHistoryVisible, setHistoryVisible] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemQuantity, setNewItemQuantity] = useState("");
-  const [itemQuantities, setItemQuantities] = useState({});
-  const [customQuantity, setCustomQuantity] = useState("");
+  const [quantities, setQuantities] = useState({});
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loadingItems, setLoadingItems] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +40,8 @@ const Attendance = ({ customer }) => {
     };
 
     fetchData();
-  }, []);
+  }, [dispatch]);
+  
 
   // Filter the product list based on the user's input
   const handleSearch = (query) => {
@@ -55,37 +59,71 @@ const Attendance = ({ customer }) => {
   // Ensure customer.dailyItems is initialized
   const dailyItems = customer?.dailyItems || {};
 
+  const markedDates = {};
+
+  // Loop through each item in dailyItems
+  customer?.dailyItems?.forEach((item) => {
+    item.attendance?.forEach((att) => {
+      const attDateString = new Date(att.date).toISOString().split("T")[0]; // Format date to "YYYY-MM-DD"
+
+      // Mark the date based on attendance status
+      markedDates[attDateString] = {
+        marked: true,
+        // Use custom styles for the circle
+        dotColor: att.taken ? "green" : "red",
+
+        customStyles: {
+          container: {
+            backgroundColor: att.taken ? "green" : "red", // Green if taken, red if not taken
+            borderRadius: 50, // Make it a circle
+            width: 30, // Width of the circle
+            height: 30, // Height of the circle
+            justifyContent: "center",
+            alignItems: "center",
+          },
+          text: {
+            color: "white", // Text color inside the circle
+          },
+        },
+      };
+    });
+  });
+
   // Function to handle the attendance marking
   const handleDatePress = (day) => {
-    setSelectedDate(day.dateString); // Set selected date
-    setModalVisible(true); // Show modal for attendance
+    setSelectedDate(day.dateString);
+    setModalVisible(true);
   };
 
   // Function to mark attendance for the date
-  const markAttendance = (itemName, isTaken, quantity) => {
-    // Initialize dailyItems if it doesn't exist
-    if (!dailyItems[itemName]) {
-      dailyItems[itemName] = { attendance: {} };
-    }
+  const markAttendance = async (itemName, isTaken, quantity, itemId) => {
+    try {
+      setLoadingItems((prev) => ({ ...prev, [itemId]: true })); // Set loading for specific item
+      await dispatch(
+        recordDailyItemAttendance({
+          id: customer._id,
+          itemName,
+          date: selectedDate,
+          quantity,
+        })
+      ).unwrap();
 
-    if (isTaken) {
-      const currentAttendance = dailyItems[itemName].attendance[
-        selectedDate
-      ] || {
-        taken: false,
-        quantity: 0,
-      };
-      currentAttendance.taken = true;
-      currentAttendance.quantity = quantity; // Update the quantity taken
-      dailyItems[itemName].attendance[selectedDate] = currentAttendance;
-    } else {
-      dailyItems[itemName].attendance[selectedDate] = {
-        taken: false,
-        quantity: 0,
-      };
-    }
+      // Dispatch quantity update for the daily item
+      await dispatch(
+        updateDailyItemQuantity({
+          id: customer._id,
+          itemName,
+          quantity,
+        })
+      ).unwrap();
 
-    setModalVisible(false); // Close the modal after marking
+      Alert.alert("Success", "Attendance marked successfully!");
+    } catch (error) {
+      console.error("Failed to mark attendance:", error);
+      Alert.alert("Error", error);
+    } finally {
+      setLoadingItems((prev) => ({ ...prev, [itemId]: false })); // Reset loading for specific item
+    }
   };
 
   // Function to add a new daily item
@@ -111,7 +149,7 @@ const Attendance = ({ customer }) => {
         Alert.alert("Error", response.error || "Failed to add the daily item.");
       } else {
         Alert.alert("Success", "Item added successfully!");
-
+        onRefresh();
         setNewItemName("");
         setNewItemQuantity("");
       }
@@ -153,62 +191,75 @@ const Attendance = ({ customer }) => {
     );
   };
 
+  const handleQuantityChange = (itemId, value) => {
+    setQuantities((prevQuantities) => ({
+      ...prevQuantities,
+      [itemId]: value,
+    }));
+  };
+
   return (
     <View className="bg-white p-5 rounded-lg shadow-sm mb-6 border border-gray-200">
       {/* Check if there are any daily items */}
 
-      {customer && dailyItems && Object.keys(dailyItems).length > 0 ? (
+      {customer.membershipStatus === "active" ? (
         <>
-          <Text className="text-lg font-semibold text-teal-700 mb-4">
-            Daily Attendance
-          </Text>
+          {customer && dailyItems && Object.keys(dailyItems).length > 0 ? (
+            <>
+              <Text className="text-lg font-semibold text-teal-700 mb-4">
+                Daily Attendance
+              </Text>
 
-          {/* Calendar to pick dates */}
-          <Calendar
-            onDayPress={handleDatePress}
-            markedDates={{
-              [selectedDate]: { selected: true, selectedColor: "teal" }, // Mark selected date
-            }}
-          />
+              {/* Calendar to pick dates */}
+              <Calendar
+                onDayPress={handleDatePress}
+                markingType={"custom"}
+                markedDates={{
+                  ...markedDates,
+                  [selectedDate]: { selected: true, selectedColor: "teal" },
+                }}
+              />
 
-          {/* "View Full Attendance History" button */}
-          <TouchableOpacity
-            onPress={() => setHistoryVisible(true)} // Open full attendance history modal
-            className="mt-4"
-          >
-            <Text className="text-blue-600 font-semibold underline">
-              View Full Attendance History
-            </Text>
-          </TouchableOpacity>
-          <View className="mt-6">
-            <Text className="text-teal-700 font-semibold mb-2">
-              Current Daily Items
-            </Text>
-            {customer &&
-              dailyItems.map((item, index) => (
-                <View
-                  key={item._id}
-                  className="flex-row justify-between items-center p-1"
-                >
-                  <Text className="text-gray-800 font-semibold">
-                    {item.itemName}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteItem(item.itemName)}
-                  >
-                    <Ionicons name="trash-outline" size={24} color="red" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-          </View>
+              {/* "View Full Attendance History" button */}
+              <TouchableOpacity
+                onPress={() => setHistoryVisible(true)} // Open full attendance history modal
+                className="mt-4"
+              >
+                <Text className="text-blue-600 font-semibold underline">
+                  View Full Attendance History
+                </Text>
+              </TouchableOpacity>
+              <View className="mt-6">
+                <Text className="text-teal-700 font-semibold mb-2">
+                  Current Daily Items
+                </Text>
+                {customer &&
+                  customer?.dailyItems.map((item, index) => (
+                    <View
+                      key={item._id}
+                      className="flex-row justify-between items-center p-1"
+                    >
+                      <Text className="text-gray-800 font-semibold">
+                        {item.itemName.name}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteItem(item.itemName.name)}
+                      >
+                        <Ionicons name="trash-outline" size={24} color="red" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+              </View>
+            </>
+          ) : (
+            <View className="mt-6">
+              <Text className="text-gray-500">
+                No daily items available for this customer.
+              </Text>
+            </View>
+          )}
         </>
-      ) : (
-        <View className="mt-6">
-          <Text className="text-gray-500">
-            No daily items available for this customer.
-          </Text>
-        </View>
-      )}
+      ) : null}
 
       {/* Form to add new daily item */}
       {customer.membershipStatus === "active" ? (
@@ -289,71 +340,108 @@ const Attendance = ({ customer }) => {
               Mark Attendance for {selectedDate}
             </Text>
 
-            {/* Scrollable content to prevent overflow */}
             <ScrollView>
-              {/* Loop through the daily items */}
-              {customer?.dailyItems?.map((item, index) => {
-                // Find the attendance record for the selected date
-                const attendanceForDate = item.attendance.find(
-                  (attendanceItem) =>
-                    new Date(attendanceItem.date).toDateString() ===
-                    new Date(selectedDate).toDateString()
-                );
+              {customer?.dailyItems?.map((item) => {
+                const attendanceRecord = item.attendance?.find((att) => {
+                  const attDateString = new Date(att.date)
+                    .toISOString()
+                    .split("T")[0];
 
-                // Set the default quantity based on the attendance record for the selected date
-                const defaultQuantity = attendanceForDate?.quantity || "";
-                
+                  return attDateString === selectedDate;
+                });
+
+                const isTaken = attendanceRecord
+                  ? attendanceRecord.taken
+                  : false;
 
                 return (
                   <View key={item._id} className="mb-4">
                     <Text className="text-teal-800 font-semibold text-md mb-2">
-                      {item.itemName}({defaultQuantity})
+                      {item.itemName.name} ({item.quantityPerDay}{" "}
+                      {item.itemName.unit})
+                      {isTaken ? (
+                        <Text className="text-green-600 ml-2 text-2xl">
+                          {" "}
+                          ✅
+                        </Text>
+                      ) : (
+                        <Text className="text-green-600 ml-2 text-2xl">
+                          {" "}
+                          ❌
+                        </Text>
+                      )}
                     </Text>
 
                     <TextInput
-                      value={customQuantity}
-                      onChangeText={setCustomQuantity}
+                      value={quantities[item.itemName._id] || ""}
+                      onChangeText={(value) =>
+                        handleQuantityChange(item.itemName._id, value)
+                      }
                       placeholder="Enter Quantity"
                       keyboardType="numeric"
                       className="border border-gray-300 p-2 rounded-lg mb-2"
                     />
 
                     <TouchableOpacity
-                      className="flex-row justify-between items-center mb-2 bg-green-100 p-2 rounded-lg"
+                      className={`flex-row justify-between items-center mb-2 ${
+                        isTaken ? "bg-gray-300" : "bg-green-100"
+                      } p-2 rounded-lg`}
                       onPress={() => {
                         markAttendance(
-                          item.itemName,
+                          item.itemName.name,
                           true,
-                          customQuantity || defaultQuantity
+                          quantities[item.itemName._id] || item.quantityPerDay,
+                          item.itemName._id // Pass item ID for loading state
                         );
-                        setCustomQuantity(""); // Clear the input field after submission
                       }}
+                      disabled={loadingItems[item.itemName._id] || loading} // Disable button when attendance is being marked
                     >
-                      <Text className="text-green-600 font-semibold">
-                        Mark Taken
+                      <Text
+                        className={`font-semibold ${
+                          isTaken ? "text-gray-600" : "text-green-600"
+                        }`}
+                      >
+                        {isTaken ? "Already Taken" : "Mark Taken"}
                       </Text>
-                      <Ionicons
-                        name="checkmark-circle-outline"
-                        size={24}
-                        color="green"
-                      />
+
+                      {/* Conditionally show loader or checkmark */}
+                      {loadingItems[item.itemName._id] ? (
+                        <ActivityIndicator size="small" color="green" />
+                      ) : (
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={24}
+                          color={isTaken ? "gray" : "green"}
+                        />
+                      )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       className="flex-row justify-between items-center bg-red-100 p-2 rounded-lg"
                       onPress={() => {
-                        markAttendance(item.itemName, false, 0);
-                        setCustomQuantity(""); // Clear the input field after submission
+                        markAttendance(
+                          item.itemName.name,
+                          false,
+                          0,
+                          item.itemName._id
+                        ); // Pass item ID for loading state
                       }}
+                      disabled={loadingItems[item.itemName._id] || loading}
                     >
                       <Text className="text-red-600 font-semibold">
                         Not Taken
                       </Text>
-                      <Ionicons
-                        name="close-circle-outline"
-                        size={24}
-                        color="red"
-                      />
+
+                      {/* Conditionally show loader or close icon */}
+                      {loadingItems[item.itemName._id] ? (
+                        <ActivityIndicator size="small" color="red" />
+                      ) : (
+                        <Ionicons
+                          name="close-circle-outline"
+                          size={24}
+                          color="red"
+                        />
+                      )}
                     </TouchableOpacity>
                   </View>
                 );
@@ -392,40 +480,66 @@ const Attendance = ({ customer }) => {
                 </Text>
               </View>
 
-              {/* Display full attendance history date-wise */}
-              {Object.keys(dailyItems)
-                .flatMap((itemName) => {
-                  // Get the attendance entries with dates
-                  return Object.entries(
-                    dailyItems[itemName].attendance || {}
-                  ).map(([date, attendance]) => ({
-                    date,
-                    itemName,
-                    attendance,
-                  }));
-                })
-                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending
-                .map((entry, i) => (
-                  <View
-                    key={i}
-                    className="flex-row justify-between border-b border-gray-200 py-2"
-                  >
-                    <Text className="w-1/3">{entry.date}</Text>
-                    <Text className="w-1/3">{entry.itemName}</Text>
-                    <Text
-                      className="w-1/3"
-                      style={{
-                        color: entry.attendance.taken ? "green" : "red",
-                        fontWeight: "bold",
-                      }} // Change color based on taken status
-                    >
-                      {entry.attendance.taken
-                        ? `Taken: ${entry.attendance.quantity} liters`
-                        : "Not Taken"}
-                    </Text>
-                  </View>
-                ))}
+              {/* Group attendance records by date */}
+              {customer.dailyItems &&
+                Object.entries(
+                  dailyItems
+                    .flatMap((item) =>
+                      item.attendance.map((attendanceRecord) => ({
+                        date: new Date(
+                          attendanceRecord.date
+                        ).toLocaleDateString(), // Format the date
+                        itemName: item.itemName.name,
+                        unit: item.itemName.unit,
+                        attendance: attendanceRecord,
+                      }))
+                    )
+                    .reduce((acc, record) => {
+                      const { date } = record;
+                      if (!acc[date]) acc[date] = [];
+                      acc[date].push(record); // Group records by date
+                      return acc;
+                    }, {})
+                )
+                  .sort((a, b) => new Date(b[0]) - new Date(a[0])) // Sort by date descending
+                  .map(([date, groupedRecords], i) => (
+                    <View key={i} className="mb-4">
+                      {/* Render the first row with the date */}
+                      {groupedRecords.map((entry, j) => (
+                        <View
+                          key={j}
+                          className="flex-row justify-between border-b border-gray-200 py-2"
+                        >
+                          {/* Only show date in the first entry for that date */}
+                          {j === 0 ? (
+                            <Text className="text-teal-800 font-semibold w-1/3 mb-2">
+                              {date}
+                            </Text>
+                          ) : (
+                            <Text className="w-1/3" /> // Leave date empty for subsequent items
+                          )}
+
+                          {/* Item Name */}
+                          <Text className="w-1/3">{entry.itemName}</Text>
+
+                          {/* Status */}
+                          <Text
+                            className="w-1/3"
+                            style={{
+                              color: entry.attendance.taken ? "green" : "red",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {entry.attendance.taken
+                              ? `Taken: ${entry.attendance.quantity} ${entry.unit}`
+                              : "Not Taken"}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ))}
             </ScrollView>
+
             <TouchableOpacity
               className="bg-teal-500 p-3 rounded-lg mt-4"
               onPress={() => setHistoryVisible(false)}

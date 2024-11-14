@@ -1,3 +1,114 @@
+/**
+ * @swagger
+ * /api/products/{id}/variants/{variantId}:
+ *   put:
+ *     summary: Update a product variant
+ *     description: Update the details of a specific variant of a product by providing new values for variant name, price, and stock quantity.
+ *     tags:
+ *       - Product
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the product containing the variant to update
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the variant to update
+ *       - in: body
+ *         name: variant
+ *         required: false
+ *         schema:
+ *           type: object
+ *           properties:
+ *             variantName:
+ *               type: string
+ *               description: The name of the variant (e.g., size, color)
+ *             variantPrice:
+ *               type: number
+ *               description: The new price of the variant
+ *             variantStockQuantity:
+ *               type: number
+ *               description: The new stock quantity for the variant
+ *     responses:
+ *       200:
+ *         description: Product variant updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product variant updated successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 product:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     variants:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           variantName:
+ *                             type: string
+ *                           variantPrice:
+ *                             type: number
+ *                           variantStockQuantity:
+ *                             type: number
+ *       400:
+ *         description: Invalid request parameters (e.g., missing required details for update)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "At least one variant detail is required to update."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00023"
+ *       404:
+ *         description: Product or variant not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product or variant not found."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00052"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "An error occurred."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

@@ -1,16 +1,19 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../lib/axios";
 
+const getToken = (state) => state.user.token;
+
 // Async Thunk for user signup
 export const signupUser = createAsyncThunk(
   "user/signup",
-  async (signUpData, { rejectWithValue }) => {
+  async ({ signUpData, deviceToken }, { rejectWithValue }) => {
     try {
-      const response = await api.post("/api/users/register", signUpData);
-      console.log("response", response.data);
+      const response = await api.post("/api/users/register", {
+        ...signUpData,
+        deviceToken,
+      });
       return response;
     } catch (error) {
-      console.error("error", error);
       return rejectWithValue(error.response.data.resultMessage); // Handle errors
     }
   }
@@ -19,16 +22,14 @@ export const signupUser = createAsyncThunk(
 // Async Thunk for user login (signIn)
 export const loginUser = createAsyncThunk(
   "user/login",
-  async (mobile, { rejectWithValue }) => {
+  async ({ mobile, deviceToken }, { rejectWithValue }) => {
     try {
       const response = await api.post("/api/users/login", {
         mobile,
+        deviceToken,
       });
-      console.log(mobile);
-      console.log(response);
       return response; // Response from the login API
     } catch (error) {
-      console.log(error);
       return rejectWithValue(error.response.data.resultMessage); // Handle errors
     }
   }
@@ -44,7 +45,6 @@ export const sendOtpUser = createAsyncThunk(
       });
       return response; // Response from send OTP API
     } catch (error) {
-      console.log(error);
       return rejectWithValue(error.response.data.resultMessage); // Handle errors
     }
   }
@@ -59,6 +59,71 @@ export const verifyOtpUser = createAsyncThunk(
         mobile,
         otp,
       });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data.resultMessage); // Handle errors
+    }
+  }
+);
+
+// Async Thunk for fetching a user by ID
+export const fetchUser = createAsyncThunk(
+  "user/fetchUser",
+  async (userId, { rejectWithValue }) => {
+    console.log(userId);
+    try {
+      const response = await api.get(`/api/users/${userId}`);
+      return response.data.user;
+    } catch (error) {
+      console.error(error);
+      return rejectWithValue(error.response.data.resultMessage); // Handle errors
+    }
+  }
+);
+
+// Async Thunk for updating a user by ID
+export const updateUser = createAsyncThunk(
+  "user/updateUser",
+  async ({ userId, updateData }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/api/users/${userId}`, updateData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data.resultMessage); // Handle errors
+    }
+  }
+);
+
+// Async Thunk for updating shop timings
+export const updateShopTimings = createAsyncThunk(
+  "user/updateShopTimings",
+  async ({ userId, shopTimings }, { getState, rejectWithValue }) => {
+    const state = getState();
+    const token = getToken(state);
+    try {
+      const response = await api.patch(
+        `/api/users/${userId}/shop-timing`,
+        shopTimings,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data.user;
+    } catch (error) {
+      console.error(error);
+      return rejectWithValue(error.response.data.resultMessage); // Handle errors
+    }
+  }
+);
+
+// Async Thunk for deleting a user by ID
+export const deleteUser = createAsyncThunk(
+  "user/deleteUser",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/api/users/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.resultMessage); // Handle errors
@@ -137,6 +202,60 @@ const userSlice = createSlice({
         state.token = action.payload.accessToken;
       })
       .addCase(verifyOtpUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch User actions
+      .addCase(fetchUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Update User actions
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Update Shop Timings actions
+      .addCase(updateShopTimings.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateShopTimings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateShopTimings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Delete User actions
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteUser.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.verified = false;
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

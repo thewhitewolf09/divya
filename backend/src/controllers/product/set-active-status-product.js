@@ -1,3 +1,78 @@
+/**
+ * @swagger
+ * /api/products/{id}/activate:
+ *   patch:
+ *     summary: Toggle product activation status
+ *     description: Toggles the activation status of a product, making it active or inactive.
+ *     tags:
+ *       - Product
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the product to update.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product status updated successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 product:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: No product ID provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "No product ID provided."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00022"
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Product not found."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00052"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Failed to update product status."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

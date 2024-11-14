@@ -202,13 +202,7 @@ const CustomerDetails = () => {
     </View>
   );
 
-  if (loading) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="teal" />
-      </SafeAreaView>
-    );
-  }
+
 
   if (!customer) {
     return (
@@ -343,7 +337,7 @@ const CustomerDetails = () => {
         </View>
 
         {/* Attendance Section */}
-        <Attendance customer={customer} />
+        <Attendance customer={customer} onRefresh={onRefresh}/>
 
         {/* Action Buttons */}
         <View className="flex-col mb-8">

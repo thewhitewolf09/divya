@@ -1,3 +1,86 @@
+/**
+ * @swagger
+ * /api/sales/credit:
+ *   get:
+ *     summary: Retrieve all credit sales
+ *     description: Fetch sales that have been made on credit, including product and customer details.
+ *     tags:
+ *       - Sales
+ *     responses:
+ *       200:
+ *         description: Credit sales data fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Success message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Success code
+ *                 sales:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       saleId:
+ *                         type: string
+ *                         description: The ID of the sale
+ *                       productId:
+ *                         type: string
+ *                         description: The ID of the product sold
+ *                       productName:
+ *                         type: string
+ *                         description: The name of the product
+ *                       customerId:
+ *                         type: string
+ *                         description: The ID of the customer
+ *                       customerName:
+ *                         type: string
+ *                         description: The name of the customer
+ *                       quantity:
+ *                         type: integer
+ *                         description: The quantity of the product sold
+ *                       price:
+ *                         type: number
+ *                         format: float
+ *                         description: The price of a single unit of the product
+ *                       totalAmount:
+ *                         type: number
+ *                         format: float
+ *                         description: The total amount for the sale (quantity * price)
+ *                       creditDetails:
+ *                         type: object
+ *                         properties:
+ *                           amountOwed:
+ *                             type: number
+ *                             format: float
+ *                             description: The amount owed by the customer
+ *                           paymentStatus:
+ *                             type: string
+ *                             description: The payment status (e.g., "Pending", "Paid")
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date of the sale
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   description: Error message
+ *                 resultCode:
+ *                   type: string
+ *                   description: Error code
+ */
+
+
 import { Sale } from '../../models/index.js';
 import { errorHelper, getText } from '../../utils/index.js';
 

@@ -1,6 +1,85 @@
+/**
+ * @swagger
+ * /api/customers/add:
+ *   post:
+ *     summary: Add a new customer
+ *     description: Creates a new customer by providing their details like name, mobile number, email, address, etc. The customer will be verified using an OTP.
+ *     tags:
+ *       - Customer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - mobile
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The name of the customer.
+ *                 example: "John Doe"
+ *               mobile:
+ *                 type: string
+ *                 description: The mobile number of the customer (must be unique).
+ *                 example: "1234567890"
+ *               whatsappNumber:
+ *                 type: string
+ *                 description: The WhatsApp number of the customer.
+ *                 example: "9876543210"
+ *               email:
+ *                 type: string
+ *                 description: The email address of the customer.
+ *                 example: "johndoe@example.com"
+ *               address:
+ *                 type: string
+ *                 description: The address of the customer.
+ *                 example: "123 Street Name, City, Country"
+ *               notes:
+ *                 type: string
+ *                 description: Any additional notes related to the customer.
+ *                 example: "Preferred contact time: 9AM-6PM"
+ *     responses:
+ *       201:
+ *         description: Customer successfully created.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Customer created successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00035"
+ *                 customer:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     mobile:
+ *                       type: string
+ *                       example: "1234567890"
+ *                     isVerified:
+ *                       type: boolean
+ *                       example: false
+ *                     otpExpiry:
+ *                       type: string
+ *                       example: "2024-11-13T10:30:00Z"
+ *       400:
+ *         description: Bad request, missing required fields.
+ *       409:
+ *         description: Customer with this mobile number already exists.
+ *       500:
+ *         description: Internal server error.
+ */
+
+
 import { Customer } from '../../models/index.js';
 import { errorHelper, getText, generateOTP, logger } from '../../utils/index.js'; // Assuming you are using the same utilities as in the register controller
-import { validateRegister } from "../../validators/user.validator.js"; // Assuming the same validation schema
 
 export default async (req, res) => {
   const addedBy = req.user._id;

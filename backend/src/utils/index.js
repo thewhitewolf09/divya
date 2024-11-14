@@ -6,4 +6,4 @@ export { default as errorHelper } from "./helpers/error-helper.js";
 export { default as generateRandomCode } from "./helpers/generate-random-code.js";
 // export { default as sendOTP } from "./sendOTP.js";
 export { default as generateOTP } from "./generateOTP.js";
-
+export { default as paymentGateway } from "./paymentGateway.js";

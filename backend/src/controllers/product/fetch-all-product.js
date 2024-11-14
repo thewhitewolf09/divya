@@ -1,3 +1,110 @@
+/**
+ * @swagger
+ * /api/products/all:
+ *   get:
+ *     summary: Retrieve a paginated list of all products
+ *     description: Fetches products with optional filters such as category, price range, availability, search text, discount status, stock status, and active status.
+ *     tags:
+ *       - Product
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of products per page
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter products by category
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
+ *       - in: query
+ *         name: available
+ *         schema:
+ *           type: string
+ *           enum: [true, false]
+ *         description: Filter products based on availability
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search products by name or description
+ *       - in: query
+ *         name: discounted
+ *         schema:
+ *           type: string
+ *           enum: [true, false]
+ *         description: Filter products by discount status
+ *       - in: query
+ *         name: stockStatus
+ *         schema:
+ *           type: string
+ *         description: Filter products by stock status (e.g., "low", "out of stock")
+ *       - in: query
+ *         name: active
+ *         schema:
+ *           type: string
+ *           enum: [true, false]
+ *         description: Filter products by active status
+ *     responses:
+ *       200:
+ *         description: A paginated list of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "Products retrieved successfully."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00089"
+ *                 totalProducts:
+ *                   type: integer
+ *                   description: Total number of products matching the filters
+ *                 currentPage:
+ *                   type: integer
+ *                   description: Current page number
+ *                 totalPages:
+ *                   type: integer
+ *                   description: Total number of pages
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultMessage:
+ *                   type: string
+ *                   example: "An error occurred."
+ *                 resultCode:
+ *                   type: string
+ *                   example: "00090"
+ */
+
+
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 

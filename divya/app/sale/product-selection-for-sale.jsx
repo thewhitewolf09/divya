@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -13,59 +13,84 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { Loader, SearchInput, CustomButton } from "../../components"; // Assuming CustomButton is correctly imported
 import { router, useFocusEffect } from "expo-router";
 import { images } from "../../constants";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllProducts } from "../../redux/slices/productSlice";
+import BottomSheet from "@gorhom/bottom-sheet";
+
 
 const ProductSelectionScreen = () => {
+  const dispatch = useDispatch();
+  const { products, loading, error } = useSelector((state) => state.product);
+
+  console.log(products)
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [productList, setProductList] = useState([
-    {
-      id: 1,
-      name: "Organic Avocado",
-      price: "250",
-      discount: "10", // Example discount
-      quantity: 15,
-      image: images.demoproduct,
-    },
-    {
-      id: 2,
-      name: "Fresh Strawberries",
-      price: "300",
-      discount: "0", // No discount
-      quantity: 10,
-      image: images.demoproduct,
-    },
-    // ... more products
-  ]);
+  const fetchProducts = async () => {
+    await dispatch(fetchAllProducts());
+  };
 
-  const filteredProducts = productList.filter((product) =>
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    setRefreshing(false);
+  };
+
+  const [activeSheet, setActiveSheet] = useState(null);
+
+  // References to control the bottom sheet
+  const filterSheetRef = useRef(null);
+  const sortSheetRef = useRef(null);
+
+  // Snap points for the bottom sheet
+  const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
+
+  // Function to toggle the filter bottom sheet
+  const handleOpenFilter = () => {
+    setActiveSheet("filter");
+    filterSheetRef.current?.expand();
+    sortSheetRef.current?.close(); // Close sort sheet if open
+  };
+
+  // Function to toggle the sort bottom sheet
+  const handleOpenSort = () => {
+    setActiveSheet("sort");
+    sortSheetRef.current?.expand();
+    filterSheetRef.current?.close(); // Close filter sheet if open
+  };
+
+  const handleCloseSheet = () => {
+    setActiveSheet(null);
+  };
+
+  const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Check if the product is added
   const isProductAdded = (productId) => {
-    return selectedProducts.some((product) => product.id === productId);
+    return selectedProducts.some((product) => product._id === productId);
   };
 
   // Add or remove a product based on its current selection state
   const toggleProductSelection = (product) => {
-    if (isProductAdded(product.id)) {
+    if (isProductAdded(product._id)) {
       // If the product is already selected, remove it
       setSelectedProducts(
-        selectedProducts.filter((selected) => selected.id !== product.id)
+        selectedProducts.filter((selected) => selected._id !== product._id)
       );
     } else {
       // If not selected, add it
       setSelectedProducts([...selectedProducts, product]);
     }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    // Fetch products logic
-    setRefreshing(false);
   };
 
   return (
@@ -113,7 +138,7 @@ const ProductSelectionScreen = () => {
               {/* Filter Button */}
               <TouchableOpacity
                 className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
-                onPress={() => alert("Filter Products")}
+                onPress={handleOpenFilter}
               >
                 <Ionicons name="filter" size={18} color="#50B498" />
                 <Text className="ml-1 text-teal-600 font-semibold">Filter</Text>
@@ -122,7 +147,7 @@ const ProductSelectionScreen = () => {
               {/* Sort Button */}
               <TouchableOpacity
                 className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
-                onPress={() => alert("Sort Products")}
+                onPress={handleOpenSort}
               >
                 <Ionicons name="swap-vertical" size={18} color="#50B498" />
                 <Text className="ml-1 text-teal-600 font-semibold">Sort</Text>
@@ -133,7 +158,7 @@ const ProductSelectionScreen = () => {
           {/* Product List */}
           <FlatList
             data={filteredProducts}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item._id}
             numColumns={2}
             renderItem={({ item }) => (
               <View className="flex flex-col items-center border border-gray-300 py-3 m-1 w-[48%] rounded-lg shadow-lg relative">
@@ -146,7 +171,7 @@ const ProductSelectionScreen = () => {
                 )}
 
                 <Image
-                  source={item.image}
+                  source={{ uri: item.productImage }}
                   className="w-40 h-40 rounded-lg"
                   resizeMode="contain"
                 />
@@ -156,12 +181,12 @@ const ProductSelectionScreen = () => {
                 <Text className="text-gray-800 font-bold">₹{item.price}</Text>
                 <TouchableOpacity
                   className={`rounded py-2 px-4 mt-2 ${
-                    isProductAdded(item.id) ? "bg-gray-400" : "bg-teal-600"
+                    isProductAdded(item._id) ? "bg-gray-400" : "bg-teal-600"
                   }`}
                   onPress={() => toggleProductSelection(item)}
                 >
                   <Text className="text-white font-semibold text-sm">
-                    {isProductAdded(item.id) ? "Added (Remove)" : "Add"}
+                    {isProductAdded(item._id) ? "Added (Remove)" : "Add"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -184,6 +209,105 @@ const ProductSelectionScreen = () => {
           textStyles="text-lg"
         />
       </View>
+
+      {/* Filter Bottom Sheet */}
+      <BottomSheet
+        ref={filterSheetRef}
+        index={activeSheet === "filter" ? 0 : -1}
+        snapPoints={snapPoints}
+        onClose={handleCloseSheet}
+        enablePanDownToClose
+      >
+        <View className="p-4 bg-white rounded-t-lg shadow-lg">
+          <Text className="text-lg font-bold mb-4 text-teal-700">
+            Filter By
+          </Text>
+
+          {/* Filter Options */}
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("category")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Category</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("price")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Price Range</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("stock")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Stock Status</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("discount")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Discounted Items</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("active")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Active Items</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("low-stock")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Low Stock</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFilterSelect("recently-added")}
+            className="py-3"
+          >
+            <Text className="text-gray-800 text-base">Recently Added</Text>
+          </TouchableOpacity>
+        </View>
+      </BottomSheet>
+
+      {/* Sort Bottom Sheet */}
+      <BottomSheet
+        ref={sortSheetRef}
+        index={activeSheet === "sort" ? 0 : -1}
+        snapPoints={snapPoints}
+        onClose={handleCloseSheet}
+        enablePanDownToClose
+        style={{ zIndex: 1001 }}
+      >
+        <View className="p-4 bg-white rounded-t-lg shadow-lg">
+          <Text className="text-lg font-bold mb-4 text-teal-700">Sort By</Text>
+
+          {/* Sort Options */}
+          <TouchableOpacity
+            onPress={() => handleSortSelect("relevance")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Relevance</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleSortSelect("price-asc")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Price: Low to High</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleSortSelect("price-desc")}
+            className="py-3 border-b border-gray-200"
+          >
+            <Text className="text-gray-800 text-base">Price: High to Low</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleSortSelect("newest-first")}
+            className="py-3"
+          >
+            <Text className="text-gray-800 text-base">Newest First</Text>
+          </TouchableOpacity>
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 };
