@@ -19,7 +19,7 @@ export default {
       {
         url: "http://localhost:8080/", 
       },
-      { url: "https://api.yourdomain.com/" } // Add the production URL here
+      { url: "https://divya-blond.vercel.app/" } // Add the production URL here
     ],
   },
   tags: [
