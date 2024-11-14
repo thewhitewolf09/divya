@@ -1,10 +1,3 @@
-import { fileURLToPath } from 'url';
-import path from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
 export default {
   swaggerDefinition: {
     openapi: "3.0.0",
@@ -40,17 +33,17 @@ export default {
     { name: "Cart", description: "API for cart management" },
   ],
   apis: [
-    path.join(__dirname, '/src/routes/*.js'), // API route definitions
-    path.join(__dirname, '/src/models/*.js'), // Model definitions
-    path.join(__dirname, '/src/controllers/user/*.js'), // User-related controllers
-    path.join(__dirname, '/src/controllers/user/auth/*.js'), // User authentication controllers
-    path.join(__dirname, '/src/controllers/customer/*.js'), // Customer-related controllers
-    path.join(__dirname, '/src/controllers/product/*.js'), // Product-related controllers
-    path.join(__dirname, '/src/controllers/sales/*.js'), // Sales-related controllers
-    path.join(__dirname, '/src/controllers/membership/*.js'), // Membership-related controllers
-    path.join(__dirname, '/src/controllers/payments/*.js'), // Payment-related controllers
-    path.join(__dirname, '/src/controllers/order/*.js'), // Order-related controllers
-    path.join(__dirname, '/src/controllers/cart/*.js'), // Cart-related controllers
-    path.join(__dirname, '/src/middlewares/*.js'), // Middleware if you want to document it
+    "src/routes/*.js", // API route definitions
+    "src/models/*.js", // Model definitions
+    "src/controllers/user/*.js", // User-related controllers
+    "src/controllers/user/auth/*.js", // User authentication controllers
+    "src/controllers/customer/*.js", // Customer-related controllers
+    "src/controllers/product/*.js", // Product-related controllers
+    "src/controllers/sales/*.js", // Sales-related controllers
+    "src/controllers/membership/*.js", // Membership-related controllers
+    "src/controllers/payments/*.js", // Payment-related controllers
+    "src/controllers/order/*.js", // Order-related controllers
+    "src/controllers/cart/*.js", // Cart-related controllers
+    "src/middlewares/*.js", // Middleware if you want to document it
   ],
 };
