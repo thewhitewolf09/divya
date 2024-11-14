@@ -48,7 +48,7 @@ await mongoose
   // app.use(rateLimiter);
   app.use("/api", routes);
 
-  app.get("/api", (_req, res) => {
+  app.get("/", (_req, res) => {
     return res
       .status(200)
       .json({
