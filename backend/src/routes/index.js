@@ -6,6 +6,7 @@ import customer from "./customer.js";
 import cart from "./cart.js";
 import order from "./order.js";
 import payments from "./payments.js";
+import notification from "./notification.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/sales", sale);
 router.use("/carts", cart);
 router.use("/orders", order);
 router.use("/payments", payments);
+router.use("/notifications", notification);
 
 export default router;

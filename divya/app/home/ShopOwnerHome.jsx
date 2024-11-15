@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { SearchInput, Loader } from "../../components";
+import { Loader } from "../../components";
 import { useFocusEffect } from "@react-navigation/native";
 import { LineChart } from "react-native-chart-kit";
 import { LinearGradient } from "expo-linear-gradient";
@@ -228,8 +228,6 @@ const ShopOwnerHome = ({ user }) => {
             </TouchableOpacity>
           </View>
 
-          <SearchInput placeholder="Search a Product" />
-
           {/* Key Stats */}
           <View className="bg-white border-2 border-teal-600 rounded-lg shadow-lg p-6 mb-4">
             <Text className="text-xl font-bold text-gray-800 mb-4">
@@ -348,7 +346,7 @@ const ShopOwnerHome = ({ user }) => {
 
             {/* Daily Items List */}
             {dashboardData.dailyItems.length > 0 ? (
-              dashboardData.dailyItems.map((item, index) => (
+              dashboardData.dailyItems.slice(0, 3).map((item, index) => (
                 <View
                   key={index}
                   className="flex flex-row justify-between items-center py-2 border-b border-gray-300"
@@ -400,7 +398,7 @@ const ShopOwnerHome = ({ user }) => {
             </Text>
 
             {dashboardData.udharOverview.length > 0 ? (
-              dashboardData.udharOverview.map((udhar, index) => (
+              dashboardData.udharOverview.slice(0, 3).map((udhar, index) => (
                 <View
                   key={index}
                   className="flex flex-row justify-between items-center py-3 border-b border-gray-200"

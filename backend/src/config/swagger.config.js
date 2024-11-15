@@ -1,5 +1,5 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,10 +35,11 @@ export default {
     { name: "Payment", description: "API for payment management" },
     { name: "Order", description: "API for order management" },
     { name: "Cart", description: "API for cart management" },
+    { name: "Notification", description: "API for notification management" },
   ],
   apis: [
-    path.resolve(__dirname, "../routes/*.js"), // Assuming routes are in src/routes
-    path.resolve(__dirname, "../models/*.js"), // Assuming models are in src/models
+    path.resolve(__dirname, "../routes/*.js"), 
+    path.resolve(__dirname, "../models/*.js"), 
     path.resolve(__dirname, "../controllers/user/*.js"),
     path.resolve(__dirname, "../controllers/user/auth/*.js"),
     path.resolve(__dirname, "../controllers/customer/*.js"),
@@ -48,6 +49,7 @@ export default {
     path.resolve(__dirname, "../controllers/payments/*.js"),
     path.resolve(__dirname, "../controllers/order/*.js"),
     path.resolve(__dirname, "../controllers/cart/*.js"),
+    path.resolve(__dirname, "../controllers/notification/*.js"),
     path.resolve(__dirname, "../middlewares/*.js"),
   ],
 };

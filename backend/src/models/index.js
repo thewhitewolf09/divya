@@ -6,6 +6,7 @@ import logModel from "./log.js";
 import cartModel from "./cart.js"
 import orderModel from "./order.js"
 import paymentModel from "./payment.js"
+import notificationModel from "./notification.js"
 
 
 export const User = userModel;
@@ -15,4 +16,5 @@ export const Customer = custormerSchema;
 export const Cart = cartModel;
 export const Payment = paymentModel;
 export const Order = orderModel;
+export const Notification = notificationModel;
 export const Log = logModel;
