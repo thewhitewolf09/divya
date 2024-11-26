@@ -98,7 +98,6 @@ const CSS_URL =
 // Initialize swagger-jsdoc with your configuration
 const specs = swaggerJsdoc(swaggerConfig);
 
-console.log(specs);
 // Serve Swagger documentation on the `/api-docs` endpoint
 app.use(
   "/api-docs",

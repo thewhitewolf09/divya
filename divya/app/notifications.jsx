@@ -1,103 +1,188 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, FlatList, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useFocusEffect, router } from "expo-router";
-import { images } from "../constants";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchNotifications,
+  markReadNotification,
+  deleteNotification,
+  clearNotificationError,
+} from "../redux/slices/notificationSlice";
 
-// Sample notifications with `isRead` property, and some without images
-const initialNotifications = [
-  {
-    id: 1,
-    title: "Rate Change Alert",
-    description: "The price of Organic Avocados has dropped by 10%.",
-    date: "Oct 01, 2024",
-    image: images.demoproduct,  // Image included
-    isRead: false,
-  },
-  {
-    id: 2,
-    title: "New Product: Fresh Strawberries",
-    description: "Fresh Strawberries are now available at ₹300 per kg.",
-    date: "Sep 30, 2024",
-    image: null,  // No image
-    isRead: true,
-  },
-  {
-    id: 3,
-    title: "Promotion Alert",
-    description: "Special discount on all berries this weekend!",
-    date: "Oct 02, 2024",
-    image: null,  // No image
-    isRead: false,
-  },
-  // Add more notifications here
-];
+// Helper function to format the date
+const formatDate = (date) => {
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return new Date(date).toLocaleDateString(undefined, options);
+};
 
 const NotificationScreen = () => {
-  // State to manage notifications
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const dispatch = useDispatch();
+  const { notifications, loading, error } = useSelector(
+    (state) => state.notification
+  );
+  const { user } = useSelector((state) => state.user);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Function to mark a notification as read
-  const markAsRead = (id) => {
-    const updatedNotifications = notifications.map((notification) =>
-      notification.id === id ? { ...notification, isRead: true } : notification
+  const fetchNotificationsHandler = async () => {
+    await dispatch(fetchNotifications({ role: user.role, id: user._id }));
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotificationsHandler();
+    }, [])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNotificationsHandler();
+    setRefreshing(false);
+  };
+
+  const handleMarkAsRead = (id) => {
+    dispatch(markReadNotification(id));
+  };
+
+  const confirmDeleteNotification = (id) => {
+    Alert.alert(
+      "Delete Notification",
+      "Are you sure you want to delete this notification?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => dispatch(deleteNotification(id)),
+        },
+      ]
     );
-    setNotifications(updatedNotifications);
   };
 
   return (
     <SafeAreaView className="h-full">
-      <View className="flex-row items-center px-4 py-3">
-        <TouchableOpacity
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.push("/home");
-            }
-          }}
-          style={{ marginRight: 5 }}
-        >
-          <Ionicons name="chevron-back" size={28} color="teal" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-semibold text-teal-700">Notifications</Text>
-      </View>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View className="flex-row items-center px-4 py-3">
+          <TouchableOpacity
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.push("/home");
+              }
+            }}
+            style={{ marginRight: 5 }}
+          >
+            <Ionicons name="chevron-back" size={28} color="teal" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-semibold text-teal-700">
+            Notifications
+          </Text>
+        </View>
 
-      <ScrollView className="px-4">
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
+        {error && (
+          <View className="p-4 bg-red-100 border border-red-500 rounded-lg mx-4">
+            <Text className="text-red-700 font-semibold">{error}</Text>
             <TouchableOpacity
-              onPress={() => markAsRead(item.id)}
-              className="flex flex-row items-center py-4 border-b border-gray-300"
+              onPress={() => dispatch(clearNotificationError())}
             >
-              {/* Conditional Rendering for Image */}
-              {item.image ? (
-                <Image source={item.image} className="w-16 h-16 rounded-lg mr-4" resizeMode="contain" />
-              ) : (
-                <View className="w-16 h-16 rounded-lg mr-4 bg-gray-200 flex items-center justify-center">
-                  <Ionicons name="notifications-outline" size={28} color="gray" />
-                </View>
-              )}
-
-              {/* Notification Details */}
-              <View className="flex-1">
-                <Text className={`text-lg font-bold ${item.isRead ? "text-gray-600" : "text-teal-700"}`}>
-                  {item.title}
-                </Text>
-                <Text className="text-gray-600">{item.description}</Text>
-                <Text className="text-gray-500 text-sm">{item.date}</Text>
-              </View>
-
-              {/* Read/Unread Indicator */}
-              {!item.isRead && (
-                <View className="w-3 h-3 rounded-full border border-teal-700 mr-4" />
-              )}
+              <Text className="text-teal-700 mt-2">Dismiss</Text>
             </TouchableOpacity>
-          )}
-        />
+          </View>
+        )}
+
+        {notifications.length > 0 ? (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item._id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => handleMarkAsRead(item._id)}
+                className="flex flex-row items-center py-4 px-4 border-b border-gray-300"
+                style={{
+                  backgroundColor: item.isRead ? "#ffffff" : "#eaf8f2",
+                  borderRadius: 8,
+                  marginBottom: 8,
+                }}
+              >
+                {/* Image */}
+                {item.image ? (
+                  <Image
+                    source={{ uri: item.image }}
+                    className="w-12 h-12 rounded-md mr-3"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View className="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center mr-3">
+                    <Ionicons
+                      name="notifications-outline"
+                      size={24}
+                      color="gray"
+                    />
+                  </View>
+                )}
+
+                {/* Notification Details */}
+                <View className="flex-1">
+                  <View className="flex flex-row items-center">
+                    <Text
+                      className={`text-base font-semibold ${
+                        item.isRead ? "text-gray-700" : "text-teal-700"
+                      }`}
+                      style={{ flex: 1 }}
+                    >
+                      {item.title}
+                    </Text>
+                    {!item.isRead && (
+                      <View className="w-3 h-3 bg-teal-700 rounded-full ml-2" />
+                    )}
+                  </View>
+                  <Text className="text-gray-600 text-sm mt-1">
+                    {item.message}
+                  </Text>
+                  <Text className="text-gray-500 text-xs mt-2">
+                    {formatDate(item.createdAt)}
+                  </Text>
+                </View>
+
+                {/* Delete Button */}
+                <TouchableOpacity
+                  onPress={() => confirmDeleteNotification(item._id)}
+                  className="ml-4"
+                >
+                  <Ionicons name="trash-outline" size={20} color="red" />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            )}
+          />
+        ) : (
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-gray-500 text-lg">
+              No notifications available
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

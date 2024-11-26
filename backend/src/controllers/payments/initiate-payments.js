@@ -130,9 +130,6 @@
  *                   type: string
  */
 
-
-
-
 import { Cart, Order, Payment, Sale, Customer } from "../../models/index.js";
 import { errorHelper, getText, paymentGateway } from "../../utils/index.js";
 
@@ -196,7 +193,10 @@ export default async (req, res) => {
       const salePromises = order.products.map(async (product, index) => {
         const discountedPrice = product.productId.discount
           ? parseFloat(
-              (product.productId.price * (1 - product.productId.discount / 100)).toFixed(2)
+              (
+                product.productId.price *
+                (1 - product.productId.discount / 100)
+              ).toFixed(2)
             )
           : product.productId.price.toFixed(2);
 

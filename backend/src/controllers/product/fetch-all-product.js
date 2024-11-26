@@ -104,15 +104,12 @@
  *                   example: "00090"
  */
 
-
 import { Product } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 
 // Get All Products API
-export default  async (req, res) => {
+export default async (req, res) => {
   const {
-    page = 1,
-    limit = 10,
     category,
     minPrice,
     maxPrice,
@@ -120,15 +117,20 @@ export default  async (req, res) => {
     search,
     discounted,
     stockStatus,
-    active
+    active,
+    sort,
   } = req.query;
 
   const query = {};
 
+  // Category Filter: Convert comma-separated string to an array and apply case-insensitive regex
   if (category) {
-    query.category = category;
+    query.category = {
+      $in: category.split(",").map((cat) => new RegExp(`^${cat.trim()}$`, "i")),
+    }; // Use case-insensitive regex for each category
   }
 
+  // Price Filter: Check if minPrice and maxPrice are provided
   if (minPrice !== undefined && maxPrice !== undefined) {
     query.price = { $gte: Number(minPrice), $lte: Number(maxPrice) };
   } else if (minPrice !== undefined) {
@@ -137,39 +139,52 @@ export default  async (req, res) => {
     query.price = { $lte: Number(maxPrice) };
   }
 
+  // Available Stock Filter
   if (available !== undefined) {
-    query.stock = available === "true" ? { $gt: 0 } : { $lte: 0 };
+    query.stockQuantity = available === "true" ? { $lte: 5 } : { $gt: 0 };
   }
 
+  // Search Query: Use MongoDB text search
   if (search) {
     query.$text = { $search: search };
   }
 
+  // Discounted Filter: Check if discounted is true
   if (discounted !== undefined) {
-    query.discounted = discounted === "true";
+    query.discount = discounted === "true" ? { $gt: 0 } : { $lte: 0 }; // Filter by non-zero discount
   }
 
+  // Stock Status Filter: Add any condition for stockStatus (if used)
   if (stockStatus !== undefined) {
-    query.stockStatus = stockStatus;
+    query.stockStatus = stockStatus; // Ensure the correct field name is used in the schema
   }
 
+  // Active Filter: Check if active is true
   if (active !== undefined) {
-    query.active = active === "true";
+    query.isActive = active === "true"; // Check the `isActive` field in the model
   }
+
+  // Sorting logic
+  const sortOptions = {
+    "price-asc": { price: 1 }, // Price: Low to High
+    "price-desc": { price: -1 }, // Price: High to Low
+    "newest-first": { createdAt: -1 }, // Newest First
+  };
+
+  const sortQuery = sortOptions[sort] || {};
 
   try {
-    const products = await Product.find(query)
-      .skip((page - 1) * limit)
-      .limit(Number(limit)).lean();
+    // Fetch the products based on the constructed query
+    const products = await Product.find(query).sort(sortQuery);;
 
+    // Count the total number of products matching the query
     const totalProducts = await Product.countDocuments(query);
 
+    // Send the response with products and pagination info
     return res.status(200).json({
       resultMessage: getText("00089"),
       resultCode: "00089",
       totalProducts,
-      currentPage: Number(page),
-      totalPages: Math.ceil(totalProducts / limit),
       products,
     });
   } catch (err) {
@@ -177,6 +192,3 @@ export default  async (req, res) => {
     return res.status(500).json(errorHelper("00090", req, err.message));
   }
 };
-
-
-

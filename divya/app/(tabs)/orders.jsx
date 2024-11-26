@@ -9,7 +9,6 @@ import {
   ScrollView,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { SearchInput } from "../../components";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllOrders } from "../../redux/slices/orderSlice";
 import BottomSheet from "@gorhom/bottom-sheet";
@@ -19,7 +18,6 @@ const OrderManagementScreen = () => {
   const dispatch = useDispatch();
 
   const { orders, loading } = useSelector((state) => state.order);
-
 
   const [refreshing, setRefreshing] = useState(false);
   const filterSheetRef = useRef(null);
@@ -110,70 +108,52 @@ const OrderManagementScreen = () => {
 
   return (
     <SafeAreaView className="bg-white h-full">
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View className="flex flex-col align-middle my-3 px-4 space-y-6">
-          {/* Header */}
-          <View className="flex justify-between items-start flex-row mb-6">
-            <View>
-              <Text className="text-2xl font-semibold text-teal-700">
-                Orders
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => router.replace("/notifications")}>
-              <View className="mt-1.5">
-                <Ionicons name="notifications" size={24} color="#0f766e" />
-              </View>
-            </TouchableOpacity>
+      <View className="flex flex-col align-middle my-3 px-4 space-y-6">
+        {/* Header */}
+        <View className="flex justify-between items-start flex-row mb-6">
+          <View>
+            <Text className="text-2xl font-semibold text-teal-700">Orders</Text>
           </View>
-
-          {/* Search Input */}
-          <SearchInput />
-
-          <View className="flex flex-row justify-between items-center my-4 ">
-            {/* Products Count */}
-            <Text className="text-gray-800 font-semibold text-lg">
-              {orders.length} Orders
-            </Text>
-
-            {/* Filter & Sort Buttons */}
-            <View className="flex flex-row space-x-3">
-              {/* Filter Button */}
-              <TouchableOpacity
-                className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
-                onPress={handleOpenFilter}
-              >
-                <Ionicons name="filter" size={18} color="#50B498" />
-                <Text className="ml-1 text-teal-600 font-semibold">Filter</Text>
-              </TouchableOpacity>
-
-              {/* Sort Button */}
-              <TouchableOpacity
-                className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
-                onPress={handleOpenSort}
-              >
-                <Ionicons name="swap-vertical" size={18} color="#50B498" />
-                <Text className="ml-1 text-teal-600 font-semibold">Sort</Text>
-              </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace("/notifications")}>
+            <View className="mt-1.5">
+              <Ionicons name="notifications" size={24} color="#0f766e" />
             </View>
-          </View>
-
-          {/* Orders List*/}
-          <FlatList
-            data={sortedOrders}
-            keyExtractor={(item) => item._id}
-            renderItem={renderOrderItem}
-            ListEmptyComponent={
-              <Text className="text-center mt-10 text-gray-600">
-                No orders available.
-              </Text>
-            }
-          />
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+
+        <View className="flex flex-row justify-between items-center my-4 ">
+          {/* Products Count */}
+          <Text className="text-gray-800 font-semibold text-lg">
+            {orders.length} Orders
+          </Text>
+
+          {/* Today's Date */}
+          <Text className="text-teal-600 font-semibold text-base">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
+        </View>
+
+        {/* Orders List*/}
+        <FlatList
+          data={sortedOrders}
+          keyExtractor={(item) => item._id}
+          renderItem={renderOrderItem}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <Text className="text-center mt-10 text-gray-600">
+              No orders available.
+            </Text>
+          }
+          contentContainerStyle={{ paddingBottom: 150 }}
+        />
+      </View>
 
       <BottomSheet
         ref={filterSheetRef}

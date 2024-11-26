@@ -76,8 +76,6 @@ const AddProduct = () => {
       // Get file info to check the size
       const fileInfo = await FileSystem.getInfoAsync(compressedImage.uri);
 
-      console.log("Compressed image size (bytes):", fileInfo.size);
-
       // Check if the compressed image size is under 5MB
       if (fileInfo.size <= 5 * 1024 * 1024) {
         setImageUri(compressedImage.uri);
@@ -89,11 +87,14 @@ const AddProduct = () => {
     }
   };
 
+
   const handleAddCategory = (newCategory) => {
-    if (newCategory && !form.category.includes(newCategory)) {
-      setForm({ ...form, category: [...form.category, newCategory] });
+    const trimmedCategory = newCategory.trim();
+    if (trimmedCategory && !form.category.includes(trimmedCategory)) {
+      setForm({ ...form, category: [...form.category, trimmedCategory] });
     }
   };
+  
 
   const handleRemoveCategory = (category) => {
     setForm({

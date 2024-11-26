@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,6 +22,8 @@ import {
 } from "../redux/slices/customerSlice";
 import { useDispatch, useSelector } from "react-redux";
 import BottomSheet from "@gorhom/bottom-sheet";
+import FilterComponentCustomer from "../components/FilterComponentCustomer";
+import SortComponentCustomer from "../components/SortComponentCustomer";
 
 const TrackDailyItems = () => {
   const dispatch = useDispatch();
@@ -32,13 +35,12 @@ const TrackDailyItems = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [quantities, setQuantities] = useState({});
   const [loadingItems, setLoadingItems] = useState({});
-  const [activeSheet, setActiveSheet] = useState(null);
 
   // References to control the bottom sheet
+  const [activeSheet, setActiveSheet] = useState(null);
+  const [filterApplied, setFilterApplied] = useState(false);
   const filterSheetRef = useRef(null);
   const sortSheetRef = useRef(null);
-
-  // Snap points for the bottom sheet
   const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
 
   // Function to toggle the filter bottom sheet
@@ -149,14 +151,38 @@ const TrackDailyItems = () => {
     setActiveSheet(null);
   };
 
+  const renderCustomerItem = ({ item: customer }) => {
+    const totalItems = Object.keys(customer.dailyItems).length;
+    const isComplete = isAttendanceComplete(customer, selectedDate);
+    const backgroundColor = isComplete ? "bg-green-100" : "bg-red-100";
+    const borderColor = isComplete ? "border-green-500" : "border-red-500";
+
+    return (
+      <TouchableOpacity
+        onPress={() => openModal(customer)}
+        className={`py-3 px-4 mb-3 ${backgroundColor} rounded-lg shadow-sm border ${borderColor} flex-row items-center justify-between`}
+      >
+        <View className="flex-1">
+          <Text className="text-lg font-semibold text-teal-700">
+            {customer.name}
+          </Text>
+          <Text className="text-sm text-gray-500">{customer.mobile}</Text>
+          <Text className="text-sm text-gray-400">
+            {customer.address.city}, {customer.address.state},{" "}
+            {customer.address.country}
+          </Text>
+          <Text className="text-sm text-gray-500">
+            {totalItems} daily items
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color="gray" />
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView className="bg-white h-full">
-      <ScrollView
-        className="p-4"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
+      <View className="p-4">
         <View className="flex-row items-center mb-6">
           <TouchableOpacity
             onPress={() => {
@@ -187,7 +213,9 @@ const TrackDailyItems = () => {
           <Text className="text-gray-800 font-semibold text-lg">
             {
               searchCustomer.filter(
-                (customer) => customer.membershipStatus === "active"
+                (customer) =>
+                  customer.membershipStatus === "active" &&
+                  customer.dailyItems.length > 0
               ).length
             }{" "}
             Customers
@@ -216,47 +244,23 @@ const TrackDailyItems = () => {
         </View>
 
         {/* Customer List */}
-        {searchCustomer.length > 0 ? (
-          searchCustomer
-            .filter((customer) => customer.membershipStatus === "active")
-            .map((customer) => {
-              const totalItems = Object.keys(customer.dailyItems).length;
-              const isComplete = isAttendanceComplete(customer, selectedDate);
-              const backgroundColor = isComplete
-                ? "bg-green-100"
-                : "bg-red-100";
-              const borderColor = isComplete
-                ? "border-green-500"
-                : "border-red-500";
-
-              return (
-                <TouchableOpacity
-                  key={customer.phone}
-                  onPress={() => openModal(customer)}
-                  className={`py-3 px-4 mb-3 ${backgroundColor} rounded-lg shadow-sm border ${borderColor} flex-row items-center justify-between`}
-                >
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold text-teal-700">
-                      {customer.name}
-                    </Text>
-                    <Text className="text-sm text-gray-500">
-                      {customer.mobile}
-                    </Text>
-                    <Text className="text-sm text-gray-400">
-                      {customer.address.city}, {customer.address.state},{" "}
-                      {customer.address.country}
-                    </Text>
-                    <Text className="text-sm text-gray-500">
-                      {totalItems} daily items
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={24} color="gray" />
-                </TouchableOpacity>
-              );
-            })
-        ) : (
-          <Text className="text-gray-600 italic mt-2">No customers found.</Text>
-        )}
+        <FlatList
+          data={searchCustomer.filter(
+            (customer) =>
+              customer.membershipStatus === "active" &&
+              customer.dailyItems.length > 0
+          )}
+          keyExtractor={(item) => item.phone}
+          renderItem={renderCustomerItem}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <Text className="text-gray-600 italic mt-2">
+              No customers found.
+            </Text>
+          }
+        />
 
         {/* Modal for updating attendance */}
         {selectedCustomer && isModalVisible && (
@@ -389,106 +393,27 @@ const TrackDailyItems = () => {
             </View>
           </Modal>
         )}
-      </ScrollView>
+      </View>
+
 
       {/* Filter Bottom Sheet */}
-      <BottomSheet
-        ref={filterSheetRef}
-        index={activeSheet === "filter" ? 0 : -1}
+      <FilterComponentCustomer
+        filterSheetRef={filterSheetRef}
         snapPoints={snapPoints}
-        onClose={handleCloseSheet}
-        enablePanDownToClose
-      >
-        <View className="p-4 bg-white rounded-t-lg shadow-lg">
-          <Text className="text-lg font-bold mb-4 text-teal-700">
-            Filter By
-          </Text>
-
-          {/* Filter Options */}
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("category")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Category</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("price")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Price Range</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("stock")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Stock Status</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("discount")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Discounted Items</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("active")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Active Items</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("low-stock")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Low Stock</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFilterSelect("recently-added")}
-            className="py-3"
-          >
-            <Text className="text-gray-800 text-base">Recently Added</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheet>
+        activeSheet={activeSheet}
+        setActiveSheet={setActiveSheet}
+        setFilterApplied={setFilterApplied}
+        filterApplied={filterApplied}
+      />
 
       {/* Sort Bottom Sheet */}
-      <BottomSheet
-        ref={sortSheetRef}
-        index={activeSheet === "sort" ? 0 : -1}
+      <SortComponentCustomer
+        sortSheetRef={sortSheetRef}
         snapPoints={snapPoints}
-        onClose={handleCloseSheet}
-        enablePanDownToClose
-        style={{ zIndex: 1001 }}
-      >
-        <View className="p-4 bg-white rounded-t-lg shadow-lg">
-          <Text className="text-lg font-bold mb-4 text-teal-700">Sort By</Text>
-
-          {/* Sort Options */}
-          <TouchableOpacity
-            onPress={() => handleSortSelect("relevance")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Relevance</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleSortSelect("price-asc")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Price: Low to High</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleSortSelect("price-desc")}
-            className="py-3 border-b border-gray-200"
-          >
-            <Text className="text-gray-800 text-base">Price: High to Low</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleSortSelect("newest-first")}
-            className="py-3"
-          >
-            <Text className="text-gray-800 text-base">Newest First</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheet>
+        activeSheet={activeSheet}
+        setActiveSheet={setActiveSheet}
+      />
+      
     </SafeAreaView>
   );
 };

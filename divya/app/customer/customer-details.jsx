@@ -13,201 +13,94 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import {
-  router,
-  useFocusEffect,
-  useLocalSearchParams,
-} from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import Attendance from "../../components/Attendance";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerDetails } from "../../redux/slices/customerSlice";
+import { getCustomerSales } from "../../redux/slices/saleSlice";
 
 const CustomerDetails = () => {
   const dispatch = useDispatch();
   const { customerId } = useLocalSearchParams();
   const { customer, loading, error } = useSelector((state) => state.customer);
+  const { sales } = useSelector((state) => state.sale);
+
   const [refreshing, setRefreshing] = useState(false);
-
-
-  const salesRecords = [
-    {
-      productId: "1",
-      productName: "Milk",
-      quantity: 2,
-      price: 100,
-      date: "2024-09-20",
-      paymentMethod: "Cash",
-      discount: 0,
-      status: "Completed",
-      totalPrice: 200, // (100 - 0) * 2
-    },
-    {
-      productId: "2",
-      productName: "Badam Juice",
-      quantity: 1,
-      price: 50,
-      date: "2024-09-21",
-      paymentMethod: "Online",
-      discount: 5,
-      status: "Completed",
-      totalPrice: 45, // (50 - 5) * 1
-    },
-    {
-      productId: "3",
-      productName: "Paneer",
-      quantity: 1,
-      price: 70,
-      date: "2024-09-22",
-      paymentMethod: "Cash",
-      discount: 0,
-      status: "Completed",
-      totalPrice: 70, // (70 - 0) * 1
-    },
-    {
-      productId: "4",
-      productName: "Fruits",
-      quantity: 3,
-      price: 90,
-      date: "2024-09-23",
-      paymentMethod: "Online",
-      discount: 10,
-      status: "Pending",
-      totalPrice: 240, // (90 - 10) * 3
-    },
-    {
-      productId: "5",
-      productName: "Yogurt",
-      quantity: 2,
-      price: 120,
-      date: "2024-09-24",
-      paymentMethod: "Cash",
-      discount: 0,
-      status: "Completed",
-      totalPrice: 240, // (120 - 0) * 2
-    },
-    {
-      productId: "6",
-      productName: "Bread",
-      quantity: 5,
-      price: 150,
-      date: "2024-09-25",
-      paymentMethod: "Online",
-      discount: 5,
-      status: "Completed",
-      totalPrice: 725, // (150 - 5) * 5
-    },
-    {
-      productId: "7",
-      productName: "Cheese",
-      quantity: 1,
-      price: 200,
-      date: "2024-09-26",
-      paymentMethod: "Cash",
-      discount: 0,
-      status: "Completed",
-      totalPrice: 200, // (200 - 0) * 1
-    },
-    {
-      productId: "8",
-      productName: "Chocolate Cake",
-      quantity: 1,
-      price: 300,
-      date: "2024-09-27",
-      paymentMethod: "Online",
-      discount: 20,
-      status: "Completed",
-      totalPrice: 280, // (300 - 20) * 1
-    },
-    {
-      productId: "9",
-      productName: "Vegetable Basket",
-      quantity: 4,
-      price: 240,
-      date: "2024-09-28",
-      paymentMethod: "Cash",
-      discount: 15,
-      status: "Completed",
-      totalPrice: 885, // (240 - 15) * 4
-    },
-    {
-      productId: "10",
-      productName: "Chicken",
-      quantity: 1,
-      price: 500,
-      date: "2024-09-29",
-      paymentMethod: "Online",
-      discount: 50,
-      status: "Pending",
-      totalPrice: 450, // (500 - 50) * 1
-    },
-  ];
-
- 
 
   const fetchCustomer = async (customerId) => {
     await dispatch(fetchCustomerDetails(customerId));
   };
 
-
-   
+  const fetchSales = async (customerId) => {
+    await dispatch(getCustomerSales(customerId));
+  };
 
   useFocusEffect(
     useCallback(() => {
       fetchCustomer(customerId);
+      fetchSales(customerId);
     }, [customerId])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchCustomer(customerId);
+    await fetchSales(customerId);
     setRefreshing(false);
   };
 
-  // const handleToggleStatus = () => {
-  //   setCustomerDetails((prevCustomer) => ({
-  //     ...prevCustomer,
-  //     isActive: !prevCustomer.isActive,
-  //   }));
-  //   Alert.alert(
-  //     "Status Updated",
-  //     `Customer is now ${!customerDetails.isActive ? "active" : "inactive"}`
-  //   );
-  // };
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // Displays time in 12-hour format with AM/PM
+    }).format(date);
+  };
+  
 
-  const renderTransaction = ({ item }) => (
-    <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
-      <View className="flex-1">
-        <Text className="text-gray-800 font-medium">
-          {item.productName} (x{item.quantity})
-        </Text>
-        <Text className="text-gray-600">{item.date}</Text>
-        <Text className="text-gray-500 font-pmedium">{item.paymentMethod}</Text>
+  const renderTransaction = ({ item }) => {
+    return (
+      <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+        <View className="flex-1">
+          <Text className="text-gray-800 font-medium">
+            {item.productId.name} (x{item.quantity})
+          </Text>
+          <Text className="text-gray-600">{formatDateTime(item.date)}</Text>
+          <Text className="text-gray-500 font-pmedium">{item.saleType}</Text>
+        </View>
+        <View>
+          <Text className="text-gray-800 font-semibold">
+            Total: ₹{item.price}
+          </Text>
+          {item.discount > 0 && (
+            <Text className="text-gray-500">
+              Discount: ₹{item.productId.discount}
+            </Text>
+          )}
+          <Text
+            className={`text-sm ${
+              item.creditDetails?.paymentStatus === "paid"
+                ? "text-green-600"
+                : "text-red-600"
+            }`}
+          >
+            {item.creditDetails?.paymentStatus}
+          </Text>
+        </View>
       </View>
-      <View>
-        <Text className="text-gray-800 font-semibold">
-          Total: ₹{item.totalPrice}
-        </Text>
-        {item.discount > 0 && (
-          <Text className="text-gray-500">Discount: ₹{item.discount}</Text>
-        )}
-        <Text
-          className={`text-sm ${
-            item.status === "Completed" ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {item.status}
-        </Text>
-      </View>
-    </View>
-  );
-
-
+    );
+  };
 
   if (!customer) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
-        <Text>No customer details found.</Text>
+        <ActivityIndicator size="medium" color="green" />
       </SafeAreaView>
     );
   }
@@ -326,9 +219,7 @@ const CustomerDetails = () => {
           <View className="flex-row justify-between mt-4">
             <Text className="text-teal-700 font-bold">
               Udhar Balance:{" "}
-              <Text className="text-red-500">
-                ₹{customer.creditBalance}
-              </Text>
+              <Text className="text-red-500">₹{customer.creditBalance}</Text>
             </Text>
             <Text className="text-teal-700 font-bold">
               Total Purchases: ₹{customer.totalPurchases}
@@ -337,30 +228,16 @@ const CustomerDetails = () => {
         </View>
 
         {/* Attendance Section */}
-        <Attendance customer={customer} onRefresh={onRefresh}/>
+        <Attendance customer={customer} onRefresh={onRefresh} />
 
         {/* Action Buttons */}
         <View className="flex-col mb-8">
-          <TouchableOpacity className="flex-row items-center bg-teal-100 p-3 rounded-lg shadow-sm border border-teal-200 mb-2">
-            <MaterialIcons name="receipt" size={24} color="teal" />
-            <Text className="text-teal-800 ml-2 font-semibold">
-              Generate Bill
-            </Text>
-          </TouchableOpacity>
-
           <View className="flex-row justify-between mb-2">
-            <TouchableOpacity className="flex-row items-center bg-green-100 p-3 rounded-lg shadow-sm border border-green-200 flex-1 mr-1">
-              <Ionicons name="cash-outline" size={24} color="green" />
-              <Text className="text-green-800 ml-2 font-semibold">
-                Mark Udhar Paid
-              </Text>
-            </TouchableOpacity>
-
             <TouchableOpacity
               onPress={() =>
                 router.push({
                   pathname: "/customer/customer-edit",
-                  params: { customerId},
+                  params: { customerId },
                 })
               }
               className="flex-row items-center bg-orange-100 p-3 rounded-lg shadow-sm border border-orange-200 flex-1 ml-1"
@@ -378,11 +255,11 @@ const CustomerDetails = () => {
           <Text className="text-lg font-semibold text-teal-700 border-b border-gray-300 pb-2 mb-4">
             Transactions & Purchases
           </Text>
-          {salesRecords.length > 0 ? (
+          {sales.length > 0 ? (
             <FlatList
-              data={salesRecords}
+              data={sales.slice().sort((a, b) => new Date(b.date) - new Date(a.date))}
               renderItem={renderTransaction}
-              keyExtractor={(item) => item.productId} // Ensure unique keys for each item
+              keyExtractor={(item) => item._id} // Ensure unique keys for each item
               showsVerticalScrollIndicator={false}
             />
           ) : (

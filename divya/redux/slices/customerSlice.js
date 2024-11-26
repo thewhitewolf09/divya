@@ -5,12 +5,27 @@ import api from "../../lib/axios";
 const getToken = (state) => state.user.token;
 
 // Fetch all customers
+// Fetch all customers
 export const fetchAllCustomers = createAsyncThunk(
   "customers/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (args = {}, { rejectWithValue }) => {
+    // Provide default values if args is empty
+    const { filters = {}, sort = null } = args;
+
+
     try {
-      const response = await api.get("/api/customers/all");
-      return response.data.customers;
+      // Construct query parameters dynamically
+      const queryParams = new URLSearchParams({
+        ...filters,
+        ...(sort && { sort }),
+      }).toString();
+
+    
+
+      // Make the API request with query parameters
+      const response = await api.get(`/api/customers/all?${queryParams}`);
+
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.resultMessage);
     }
@@ -347,6 +362,7 @@ const customerSlice = createSlice({
   initialState: {
     customers: [],
     customer: null,
+    totalCustomers: 0,
     loading: false,
     error: null,
   },
@@ -362,8 +378,9 @@ const customerSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchAllCustomers.fulfilled, (state, action) => {
+        state.customers = action.payload.customers;
+        state.totalCustomers = action.payload.totalCustomers;
         state.loading = false;
-        state.customers = action.payload;
       })
       .addCase(fetchAllCustomers.rejected, (state, action) => {
         state.loading = false;

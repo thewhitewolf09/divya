@@ -7,10 +7,16 @@ const getToken = (state) => state.user.token;
 // Fetch all products
 export const fetchAllProducts = createAsyncThunk(
   "products/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (args = {}, { rejectWithValue }) => {
+    const { filters = {}, sort = null } = args; 
+
     try {
-      const response = await api.get("/api/products/all");
-      return response.data.products;
+      const queryParams = new URLSearchParams({
+        ...filters,
+        ...(sort && { sort }),
+      }).toString();
+      const response = await api.get(`/api/products/all?${queryParams}`);
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -23,11 +29,9 @@ export const fetchSingleProduct = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await api.get(`/api/products/${id}`);
-      console.log(response.data)
 
       return response.data.product;
     } catch (error) {
-      console.error(error)
       return rejectWithValue(error.response.data);
     }
   }
@@ -312,6 +316,7 @@ const productSlice = createSlice({
   initialState: {
     products: [],
     product: null,
+    totalProducts: 0,
     loading: false,
     error: null,
   },
@@ -327,8 +332,9 @@ const productSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchAllProducts.fulfilled, (state, action) => {
+        state.products = action.payload.products;
+        state.totalProducts = action.payload.totalProducts;
         state.loading = false;
-        state.products = action.payload;
       })
       .addCase(fetchAllProducts.rejected, (state, action) => {
         state.loading = false;
@@ -561,7 +567,6 @@ const productSlice = createSlice({
           if (index !== -1) {
             console.log(`Success: ${message} for product ID ${_id}`);
           }
-          
         });
 
         failures.forEach(({ _id, message }) => {

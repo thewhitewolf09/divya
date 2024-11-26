@@ -99,10 +99,7 @@
  *         description: Internal server error.
  */
 
-
-
-
-import { Customer, Sale } from "../../models/index.js";
+import { Customer } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
 
 export default async (req, res) => {
@@ -115,6 +112,7 @@ export default async (req, res) => {
     maxPurchases,
     minBalance,
     maxBalance,
+    sort
   } = req.query;
 
   try {
@@ -136,7 +134,7 @@ export default async (req, res) => {
     }
 
     if (membershipStatus) {
-      query.membershipStatus = membershipStatus;
+      query.membershipStatus = "active";
     }
 
     if (minPurchases || maxPurchases) {
@@ -159,17 +157,40 @@ export default async (req, res) => {
       }
     }
 
-    // Fetch customers based on the query
+    // Determine the sort option
+    let sortOption = {};
+    if (sort) {
+      switch (sort) {
+        case "name-asc":
+          sortOption = { name: 1 }; // Sort by name in ascending order
+          break;
+        case "name-desc":
+          sortOption = { name: -1 }; // Sort by name in descending order
+          break;
+        case "date-desc":
+          sortOption = { registrationDate: -1 }; // Sort by registration date (newest first)
+          break;
+        default:
+          break;
+      }
+    }
+
+
+    // Fetch paginated customers based on the query
     const customers = await Customer.find(query)
-    .populate("addedBy")
+      .sort(sortOption)
+      .populate("addedBy")
       .populate("shops")
       .populate("dailyItems.itemName")
       .lean()
       .exec();
 
+    const totalCustomers = await Customer.countDocuments(query); // Count total matching customers
+
     return res.status(200).json({
       resultMessage: getText("00089"), // Successfully retrieved customers
       resultCode: "00089",
+      totalCustomers,
       customers,
     });
   } catch (err) {

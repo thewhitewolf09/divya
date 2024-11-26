@@ -14,6 +14,7 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import { useFocusEffect } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { LinearGradient } from "expo-linear-gradient";
 import { Loader } from "../../components";
 import ShopTimings from "../../components/ShopTimings";
@@ -34,7 +35,6 @@ const SettingsScreen = () => {
   const { user } = useSelector((state) => state.user);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
 
   const [shopTimings, setShopTimings] = useState({
     openingTime: user?.openingTime || "",
@@ -131,6 +131,10 @@ const SettingsScreen = () => {
     </TouchableOpacity>
   );
 
+  const handleEditProfile = () => {
+    console.log("edit");
+  };
+
   return (
     <SafeAreaView className="bg-white h-full">
       <ScrollView
@@ -150,11 +154,19 @@ const SettingsScreen = () => {
           </View>
 
           {/* User Info Section */}
-          <View className="rounded-lg shadow-lg mb-4">
+          <View className="rounded-lg shadow-lg mb-4 relative">
             <LinearGradient
               colors={["#D6F6F5", "#B3E0DF"]}
               className="p-6 rounded-lg"
             >
+              {/* Edit Profile Icon */}
+              <TouchableOpacity
+                onPress={handleEditProfile} // Define this function to navigate to the edit profile screen
+                className="absolute top-4 right-4"
+              >
+                <FontAwesome name="edit" size={28} color="#0f766e" />
+              </TouchableOpacity>
+
               <View className="flex flex-row items-center">
                 <Ionicons name="person-circle" size={60} color="#0f766e" />
                 <View className="ml-4 flex-1">

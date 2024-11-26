@@ -97,7 +97,7 @@ const ProductDetails = () => {
 
   const handleToggleCartItem = async () => {
     setCartLoading(true);
-    const isInCart = (cart.items || []).some(
+    const isInCart = (cart.items || [])?.some(
       (item) => item.productId._id === product._id
     );
 
@@ -425,7 +425,7 @@ const ProductDetails = () => {
               </Text>
               {product.variants.map((variant) => {
                 // Check if any other variant of the same product is in the cart
-                const isOtherVariantInCart = cart.items.some(
+                const isOtherVariantInCart = cart.items?.some(
                   (item) =>
                     item.productId._id === product._id &&
                     item.variantId !== variant._id

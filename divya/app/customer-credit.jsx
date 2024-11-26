@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import {
   fetchAllCustomers,
   updateCreditsOfCustomer,
 } from "../redux/slices/customerSlice";
+import SortComponentCustomer from "../components/SortComponentCustomer";
 
 const CustomerCreditScreen = () => {
   const dispatch = useDispatch();
@@ -35,6 +36,18 @@ const CustomerCreditScreen = () => {
   const [searchCustomer, setSearchCustomer] = useState(
     customers.filter((customer) => customer?.creditBalance > 0)
   );
+
+   // References to control the bottom sheet
+   const [activeSheet, setActiveSheet] = useState(null);
+   const sortSheetRef = useRef(null);
+   const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
+ 
+   // Function to toggle the sort bottom sheet
+   const handleOpenSort = () => {
+     setActiveSheet("sort");
+     sortSheetRef.current?.expand();
+   };
+
 
   const openModal = (customer) => {
     setSelectedCustomer(customer);
@@ -193,11 +206,9 @@ const CustomerCreditScreen = () => {
 
   return (
     <SafeAreaView className="bg-white h-full">
-      <ScrollView
+      <View
         className="p-4"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+   
       >
         <View className="flex-row items-center mb-6">
           <TouchableOpacity
@@ -232,7 +243,7 @@ const CustomerCreditScreen = () => {
           <View className="flex flex-row space-x-3">
             <TouchableOpacity
               className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
-              onPress={() => alert("Sort Products")}
+              onPress={handleOpenSort}
             >
               <Ionicons name="swap-vertical" size={18} color="#50B498" />
               <Text className="ml-1 text-teal-600 font-semibold">Sort</Text>
@@ -255,6 +266,9 @@ const CustomerCreditScreen = () => {
             data={searchCustomer}
             renderItem={renderCustomer}
             keyExtractor={(item) => item.phone}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
             ListEmptyComponent={() => (
               <Text className="text-gray-600 italic mt-2">
                 No customers found.
@@ -408,7 +422,15 @@ const CustomerCreditScreen = () => {
             </View>
           </Modal>
         )}
-      </ScrollView>
+      </View>
+
+       {/* Sort Bottom Sheet */}
+       <SortComponentCustomer
+        sortSheetRef={sortSheetRef}
+        snapPoints={snapPoints}
+        activeSheet={activeSheet}
+        setActiveSheet={setActiveSheet}
+      />
     </SafeAreaView>
   );
 };
