@@ -12,10 +12,14 @@
         "buildType": "apk"
       },
       "ios": {
-        "simulator":true
+        "simulator": true
       }
     },
-    "production": {}
+    "production": {
+      "android": {
+        "buildType": "apk"
+      }
+    }
   },
   "submit": {
     "production": {}
