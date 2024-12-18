@@ -9,12 +9,12 @@ export const fetchAllProducts = createAsyncThunk(
   "products/fetchAll",
   async (args = {}, { rejectWithValue }) => {
     const { filters = {}, sort = null } = args; 
-
     try {
       const queryParams = new URLSearchParams({
         ...filters,
         ...(sort && { sort }),
       }).toString();
+
       const response = await api.get(`/api/products/all?${queryParams}`);
       return response.data;
     } catch (error) {

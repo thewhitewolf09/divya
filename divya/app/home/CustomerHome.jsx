@@ -27,12 +27,18 @@ import {
 } from "../../redux/slices/customerSlice";
 import QRCode from "react-native-qrcode-svg";
 import { fetchUser } from "../../redux/slices/userSlice";
+import ProductCarousel from "../../components/ProductCarousel";
+import { fetchAllProducts } from "../../redux/slices/productSlice";
+import { images } from "../../constants";
+import ScrollableCategories from "../../components/ScrollableCategories";
 
-const CustomerHome = ({ user }) => {
+const CustomerHome = () => {
   const dispatch = useDispatch();
   const { customers, customer, loading, error } = useSelector(
     (state) => state.customer
   );
+  const { user } = useSelector((state) => state.user);
+  const { products } = useSelector((state) => state.product);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -76,6 +82,7 @@ const CustomerHome = ({ user }) => {
   }
 
   const fetchData = async (customerId) => {
+    await dispatch(fetchAllProducts());
     await dispatch(fetchCustomerDetails(customerId));
     await dispatch(fetchAllCustomers());
   };
@@ -190,7 +197,38 @@ const CustomerHome = ({ user }) => {
             </TouchableOpacity>
           </View>
 
-          <SearchInput placeholder="Search a Product" />
+          <View className="relative w-full h-48 ">
+            <Image
+              source={images.cards}
+              className="w-full h-48 ml-8"
+              resizeMode="contain"
+            />
+            {/* Tagline Overlay */}
+            <View className="absolute  top-[-20] left-1 bg-opacity-50 flex justify-start items-start">
+              <Text className="text-teal-700 text-2xl font-semibold leading-snug mt-4">
+                Discover
+              </Text>
+              <Text className="text-teal-700 text-2xl font-semibold leading-snug">
+                the best
+              </Text>
+              <Text className="text-teal-700 text-2xl font-semibold leading-snug">
+                Deals!
+              </Text>
+              <Text className="text-teal-700 text-4xl font-semibold leading-snug">
+                🛍️
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => router.replace("/products")}
+                className="bg-white mt-1 rounded-full px-6 py-3 border-2 border-teal-700 shadow-lg"
+              >
+                <Text className="text-teal-700 font-bold">Shop Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollableCategories products={products} />
+          <ProductCarousel products={products} />
 
           {/* Quick Actions */}
           <View className="flex flex-row flex-wrap justify-evenly mb-2">

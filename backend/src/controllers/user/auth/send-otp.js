@@ -83,7 +83,8 @@ import {
   errorHelper,
   getText,
   logger,
-  generateOTP, // Utility to generate OTP
+  generateOTP,
+  sendOTP, // Utility to generate OTP
 } from "../../../utils/index.js";
 import { User, Customer } from "../../../models/index.js"; // Import both User and Customer models
 
@@ -124,7 +125,6 @@ export default async (req, res) => {
     return res.status(500).json(errorHelper("00034", req, err.message));
   });
 
-  // Uncomment the following line when implementing the OTP sending logic
   // await sendOTP(user.mobile, otp).catch((err) => {
   //   return res.status(500).json(errorHelper("00036", req, err.message)); // "Failed to send OTP."
   // });

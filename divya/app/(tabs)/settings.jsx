@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   FlatList,
@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Linking,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { useFocusEffect } from "@react-navigation/native";
@@ -22,7 +23,9 @@ import NotificationsModal from "../../components/NotificationSettings";
 import RateWeightCalculator from "../../components/RateWeightCalculator";
 import HelpSupport from "../../components/HelpSupport";
 import { useDispatch, useSelector } from "react-redux";
+import { Picker } from "@react-native-picker/picker";
 import {
+  fetchShopList,
   fetchUser,
   logout,
   updateShopTimings,
@@ -32,8 +35,10 @@ import { fetchCustomerDetails } from "../../redux/slices/customerSlice";
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.user);
+  const { user, role, shops } = useSelector((state) => state.user);
+  const { customer } = useSelector((state) => state.customer);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedShop, setSelectedShop] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const [shopTimings, setShopTimings] = useState({
@@ -43,13 +48,12 @@ const SettingsScreen = () => {
 
   // Define settings options based on user role
   const settingsOptions = [
-    { id: "2", name: "Notifications", icon: "notifications" },
+    // { id: "2", name: "Notifications", icon: "notifications" },
     { id: "3", name: "Rate/Weight Calculator", icon: "calculator" },
-    { id: "4", name: "Help & Support", icon: "help-circle" },
+    // { id: "4", name: "Help & Support", icon: "help-circle" },
   ];
 
-  // If the user is a shop owner, add "Shop Timings" option
-  if (user?.role === "shopOwner") {
+  if (role === "shopOwner") {
     settingsOptions.unshift({ id: "1", name: "Shop Timings", icon: "time" });
   }
 
@@ -63,13 +67,32 @@ const SettingsScreen = () => {
 
   const fetchSettings = async () => {
     setIsLoading(true);
-    if (user.role === "customer") {
+    if (role === "customer") {
+      await dispatch(fetchShopList());
       await dispatch(fetchCustomerDetails(user._id));
     } else {
+      await dispatch(fetchShopList());
       await dispatch(fetchUser(user._id));
     }
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (role === "customer" && shops.length === 1) {
+      setSelectedShop(shops[0]);
+    } else {
+      const shop = shops.find((shop) => shop._id === user._id);
+      if (
+        shop &&
+        shop.shopLocation.googleMapLocation?.latitude &&
+        shop.shopLocation.googleMapLocation?.longitude
+      ) {
+        setSelectedShop(shop);
+      } else {
+        setSelectedShop(null);
+      }
+    }
+  }, [role, shops]);
 
   useFocusEffect(
     useCallback(() => {
@@ -77,9 +100,10 @@ const SettingsScreen = () => {
     }, [])
   );
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    fetchSettings().finally(() => setRefreshing(false));
+    await fetchSettings();
+    setRefreshing(false);
   };
 
   const handleSaveTimings = (newOpeningTime, newClosingTime) => {
@@ -132,7 +156,18 @@ const SettingsScreen = () => {
   );
 
   const handleEditProfile = () => {
-    console.log("edit");
+    if (role === "shopOwner") {
+      router.replace("/user/edit-user");
+    } else {
+      router.push({
+        pathname: "/customer/customer-edit",
+        params: { customerId: user._id },
+      });
+    }
+  };
+
+  const contactSupport = () => {
+    Linking.openURL("mailto:support@yourapp.com?subject=Help Request");
   };
 
   return (
@@ -176,7 +211,7 @@ const SettingsScreen = () => {
                   <Text className="text-gray-600">{user.mobile}</Text>
 
                   {/* Display shop timings and address for shopOwner */}
-                  {user?.role === "shopOwner" && (
+                  {role === "shopOwner" && (
                     <>
                       <Text className="text-gray-800 font-bold mt-1">
                         {shopTimings.openingTime} - {shopTimings.closingTime}
@@ -191,10 +226,10 @@ const SettingsScreen = () => {
                   )}
 
                   {/* Display address for customer */}
-                  {user?.role === "customer" && (
+                  {role === "customer" && (
                     <Text className="text-gray-600 mt-1">
-                      {user?.address?.street}, {user?.address?.city},{" "}
-                      {user?.address?.state}, {user?.address?.country}
+                      {customer?.address?.street}, {customer?.address?.city},{" "}
+                      {customer?.address?.state}, {customer?.address?.country}
                     </Text>
                   )}
                 </View>
@@ -202,8 +237,34 @@ const SettingsScreen = () => {
             </LinearGradient>
           </View>
 
+          {role === "customer" && shops.length > 1 && (
+            <View className="mb-4">
+              <Text className="text-lg font-semibold text-teal-700 mb-2">
+                Select a Shop:
+              </Text>
+              <View className="border border-teal-600 rounded-lg bg-teal-50">
+                <Picker
+                  selectedValue={selectedShop?._id}
+                  onValueChange={(itemValue) => {
+                    const shop = shops.find((shop) => shop._id === itemValue);
+                    setSelectedShop(shop);
+                  }}
+                  style={{ height: 50, width: "100%" }}
+                >
+                  {shops.map((shop) => (
+                    <Picker.Item
+                      key={shop._id}
+                      label={shop.name}
+                      value={shop._id}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          )}
+
           {/* Google Map for shopOwner */}
-          {user?.role === "shopOwner" && user?.shopLocation && (
+          {shops && selectedShop && (
             <View className={`mb-4 rounded-lg shadow-lg`}>
               <View
                 style={{
@@ -214,30 +275,43 @@ const SettingsScreen = () => {
                 }}
               >
                 <MapView
-                  style={{ height: isMapExpanded ? "100%" : 200 }}
-                  initialRegion={{
-                    latitude: user.shopLocation.googleMapLocation.latitude,
-                    longitude: user.shopLocation.googleMapLocation.longitude,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005,
+                  style={{
+                    height: isMapExpanded ? 500 : 200,
+                    marginBottom: 40,
                   }}
+                  region={{
+                    latitude:
+                      selectedShop?.shopLocation.googleMapLocation?.latitude ||
+                      0,
+                    longitude:
+                      selectedShop?.shopLocation.googleMapLocation?.longitude ||
+                      0,
+                    latitudeDelta: isMapExpanded ? 0.002 : 0.01,
+                    longitudeDelta: isMapExpanded ? 0.002 : 0.01,
+                  }}
+                  zoomEnabled={true}
+                  scrollEnabled={true}
+                  showsUserLocation={true}
+                  followsUserLocation={true}
                 >
                   <Marker
                     coordinate={{
-                      latitude: user.shopLocation.googleMapLocation.latitude,
-                      longitude: user.shopLocation.googleMapLocation.longitude,
+                      latitude:
+                        selectedShop.shopLocation.googleMapLocation?.latitude,
+                      longitude:
+                        selectedShop.shopLocation.googleMapLocation?.longitude,
                     }}
-                    title={user.name}
-                    description={`${user.shopLocation.address.street}, ${user.shopLocation.address.city}, ${user.shopLocation.address.state}`}
+                    title={selectedShop.name}
+                    description={`${selectedShop.shopLocation?.address?.street}, ${selectedShop.shopLocation?.address?.city}, ${selectedShop.shopLocation?.address?.state}`}
                   />
                 </MapView>
 
                 {/* Address Text */}
                 <View className="absolute bottom-0 left-0 right-0 p-2 bg-white rounded-lg">
                   <Text className="text-center text-sm font-semibold">
-                    {user.shopLocation.address.street},{" "}
-                    {user.shopLocation.address.city},{" "}
-                    {user.shopLocation.address.state}
+                    {selectedShop.shopLocation?.address?.street},{" "}
+                    {selectedShop.shopLocation?.address?.city},{" "}
+                    {selectedShop.shopLocation?.address?.state}
                   </Text>
                 </View>
 
@@ -257,7 +331,7 @@ const SettingsScreen = () => {
           )}
 
           {/* Payment History Button for Customers */}
-          {user?.role === "customer" && (
+          {role === "customer" && (
             <TouchableOpacity
               className="flex flex-row items-center p-4 bg-teal-50 rounded-lg shadow-md mb-3 border border-teal-600"
               onPress={() =>
@@ -282,6 +356,43 @@ const SettingsScreen = () => {
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
           />
+
+          {/* Contact Support Section */}
+          <View className="mb-2">
+            <Text className="text-xl font-semibold text-teal-700 mb-4">
+              Need further assistance?
+            </Text>
+
+            <TouchableOpacity
+              onPress={contactSupport}
+              className="bg-teal-600 py-4 rounded-full shadow-lg flex flex-row items-center justify-center"
+            >
+              <Ionicons name="mail-outline" size={24} color="#fff" />
+              <Text className="text-center text-white font-bold text-lg ml-2">
+                Contact Support
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/* Feedback Section */}
+          <View className="mb-6">
+            <Text className="text-xl font-semibold text-teal-700 mb-4">
+              We value your feedback!
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://yourapp.com/feedback")}
+              className="bg-gray-400 py-4 rounded-full shadow-lg flex flex-row items-center justify-center"
+            >
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={24}
+                color="#fff"
+              />
+              <Text className="text-center text-white font-bold text-lg ml-2">
+                Submit Feedback
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -308,9 +419,9 @@ const SettingsScreen = () => {
           {currentOption?.id === "3" && (
             <RateWeightCalculator setModalVisible={setModalVisible} />
           )}
-          {currentOption?.id === "4" && (
+          {/* {currentOption?.id === "4" && (
             <HelpSupport setModalVisible={setModalVisible} />
-          )}
+          )} */}
         </View>
       </Modal>
     </SafeAreaView>

@@ -23,7 +23,7 @@ const FilterComponentProduct = ({
   filterApplied,
 }) => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.user);
+  const { user, role } = useSelector((state) => state.user);
   const { products, totalProducts, loading, error } = useSelector(
     (state) => state.product
   );
@@ -260,7 +260,7 @@ const FilterComponentProduct = ({
 
         {/* Stock & Status Toggles */}
         <View className="py-3 border-b border-gray-200">
-          {user.role === "shopOwner" ? (
+          {role === "shopOwner" ? (
             <>
               <View className="flex-row justify-between items-center py-2">
                 <Text className="text-gray-800 text-base">Active Items</Text>

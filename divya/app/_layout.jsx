@@ -143,6 +143,11 @@ const RootLayout = () => {
                 name="order/order-history"
                 options={{ headerShown: false }}
               />
+
+              <Stack.Screen
+                name="user/edit-user"
+                options={{ headerShown: false }}
+              />
             </Stack>
           </GestureHandlerRootView>
           <StatusBar backgroundColor="#468585" style="light" />

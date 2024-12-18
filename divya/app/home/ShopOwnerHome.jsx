@@ -21,10 +21,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllSales } from "../../redux/slices/saleSlice";
 import { fetchAllCustomers } from "../../redux/slices/customerSlice";
 
-const ShopOwnerHome = ({ user }) => {
+const ShopOwnerHome = () => {
   const dispatch = useDispatch();
   const { sales } = useSelector((state) => state.sale);
   const { customers } = useSelector((state) => state.customer);
+  const { user } = useSelector((state) => state.user);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [weeklySales, setWeeklySales] = useState([0, 0, 0, 0]);

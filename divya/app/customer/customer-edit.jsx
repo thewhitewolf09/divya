@@ -71,7 +71,7 @@ const EditCustomer = () => {
   const { customerId } = useLocalSearchParams();
   const dispatch = useDispatch();
   const { customer, loading, error } = useSelector((state) => state.customer);
-
+  const { user, role } = useSelector((state) => state.user);
   const [uploading, setUploading] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [membershipStatus, setMembershipStatus] = useState("inactive");
@@ -88,8 +88,6 @@ const EditCustomer = () => {
     totalPurchases: 0,
     creditBalance: 0,
   });
-
-  const navigation = useNavigation();
 
   const fetchCustomer = async (customerId) => {
     await dispatch(fetchCustomerDetails(customerId));
@@ -121,7 +119,8 @@ const EditCustomer = () => {
   }, [customer]);
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Check if all required fields are filled
     if (
       form.name === "" ||
       form.mobile === "" ||
@@ -132,38 +131,52 @@ const EditCustomer = () => {
     ) {
       return Alert.alert("Error", "Please fill in all required fields.");
     }
-  
+
+    // Validate phone number (should be a valid 10-digit number)
     if (!/^\d{10}$/.test(form.mobile)) {
       return Alert.alert(
         "Invalid Input",
         "Please enter a valid 10-digit phone number."
       );
     }
-  
+
+    // Set uploading state to show progress
     setUploading(true);
-  
-    // Dispatch action to update the customer in the Redux store
-    dispatch(
-      updateCustomer({
-        id: customerId,
-        customerData: { 
-          ...form,
-          isActive,
-          membershipStatus,
-        },
-      })
-    );
-  
-    // Simulate data submission process
-    setTimeout(() => {
+
+    try {
+      // Dispatch action to update customer data
+      await dispatch(
+        updateCustomer({
+          id: customerId,
+          customerData: {
+            ...form,
+            isActive,
+            membershipStatus,
+          },
+        })
+      ).unwrap();
+
+      // Simulate successful update response after dispatch
       Alert.alert("Success", "Customer data has been updated.");
-      setUploading(false);
-      navigation.goBack();
-    }, 1000);
+      setUploading(false); // Reset uploading state
+
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.push("/settings");
+      }
+    } catch (error) {
+      // Handle any errors that occur during the update process
+      setUploading(false); // Reset uploading state in case of an error
+      console.error("Error updating customer:", error); // Log error for debugging
+
+      // Show error message to user
+      Alert.alert(
+        "Error",
+        "There was an issue updating the customer data. Please try again later."
+      );
+    }
   };
-  
-
-
 
   if (loading) {
     return (
@@ -266,50 +279,54 @@ const EditCustomer = () => {
           keyboardType="numeric"
         />
 
-        {/* Notes section */}
-        <View className="mt-7">
-          <Text className="text-lg text-teal-700 font-bold mb-2">Notes</Text>
-          <TextInput
-            value={form.notes}
-            placeholder="Add any notes (optional)..."
-            onChangeText={(e) => setForm({ ...form, notes: e })}
-            className="w-full h-16 p-4 bg-white rounded-xl border-2 border-teal-600 focus:border-secondary flex flex-row items-center text-black font-psemibold text-base"
-            style={{ height: 100, textAlignVertical: "top" }}
-            multiline={true}
-            numberOfLines={4}
-          />
-        </View>
+        {role === "shopOwner" ? (
+          <>
+            {/* Notes section */}
+            <View className="mt-7">
+              <Text className="text-lg text-teal-700 font-bold mb-2">
+                Notes
+              </Text>
+              <TextInput
+                value={form.notes}
+                placeholder="Add any notes (optional)..."
+                onChangeText={(e) => setForm({ ...form, notes: e })}
+                className="w-full h-16 p-4 bg-white rounded-xl border-2 border-teal-600 focus:border-secondary flex flex-row items-center text-black font-psemibold text-base"
+                style={{ height: 100, textAlignVertical: "top" }}
+                multiline={true}
+                numberOfLines={4}
+              />
+            </View>
 
-    
+            {/* Toggle for Active Status */}
+            <View className="flex-row items-center justify-between mt-4 mb-6">
+              <Text className="text-lg text-teal-700 font-bold ">
+                Active Status
+              </Text>
+              <Switch value={isActive} onValueChange={setIsActive} />
+            </View>
 
-        {/* Toggle for Active Status */}
-        <View className="flex-row items-center justify-between mt-4 mb-6">
-          <Text className="text-lg text-teal-700 font-bold ">
-            Active Status
-          </Text>
-          <Switch value={isActive} onValueChange={setIsActive} />
-        </View>
-
-        {/* Membership Status dropdown */}
-        <Text className="text-lg text-teal-700 font-bold mb-4">
-          Membership Status
-        </Text>
-        <Dropdown
-          data={[
-            { label: "Active", value: "active" },
-            { label: "Inactive", value: "inactive" },
-          ]}
-          labelField="label"
-          valueField="value"
-          value={membershipStatus}
-          onChange={(item) => setMembershipStatus(item.value)}
-          style={{
-            borderColor: "#0d9488",
-            borderWidth: 2,
-            borderRadius: 8,
-            padding: 16,
-          }}
-        />
+            {/* Membership Status dropdown */}
+            <Text className="text-lg text-teal-700 font-bold mb-4">
+              Membership Status
+            </Text>
+            <Dropdown
+              data={[
+                { label: "Active", value: "active" },
+                { label: "Inactive", value: "inactive" },
+              ]}
+              labelField="label"
+              valueField="value"
+              value={membershipStatus}
+              onChange={(item) => setMembershipStatus(item.value)}
+              style={{
+                borderColor: "#0d9488",
+                borderWidth: 2,
+                borderRadius: 8,
+                padding: 16,
+              }}
+            />
+          </>
+        ) : null}
 
         {/* Submit Button */}
         <CustomButton

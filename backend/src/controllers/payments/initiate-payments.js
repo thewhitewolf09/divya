@@ -130,8 +130,17 @@
  *                   type: string
  */
 
-import { Cart, Order, Payment, Sale, Customer } from "../../models/index.js";
+import {
+  Cart,
+  Order,
+  Payment,
+  Sale,
+  Customer,
+  User,
+  Notification,
+} from "../../models/index.js";
 import { errorHelper, getText, paymentGateway } from "../../utils/index.js";
+import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
   const { orderId, customerId, paymentMethod } = req.body;
@@ -234,6 +243,62 @@ export default async (req, res) => {
       cart.items = [];
       cart.totalAmount = 0;
       await cart.save();
+
+      // Notifications
+      // Notify Admin
+      const adminUsers = await User.find({
+        role: "shopOwner",
+        deviceToken: { $exists: true },
+      });
+      
+      const adminDeviceTokens = adminUsers
+        .map((admin) => admin.deviceToken)
+        .filter(Boolean);
+
+      const adminNotificationMessage = {
+        title: "New Order Placed",
+        message: `Order #${order._id} has been placed for ₹${amount}.`,
+        data: { orderId: order._id },
+      };
+
+      if (adminDeviceTokens.length > 0) {
+        await sendPushNotification(adminDeviceTokens, adminNotificationMessage);
+      }
+
+      // Save notifications in the database for admins
+      const adminNotificationPromises = adminUsers.map((admin) =>
+        Notification.create({
+          title: adminNotificationMessage.title,
+          message: adminNotificationMessage.message,
+          recipientRole: "shopOwner",
+          recipientId: admin._id,
+        })
+      );
+      await Promise.all(adminNotificationPromises);
+
+      // Notify Customer
+      const customerNotificationMessage = {
+        title: "Order Successfully Placed",
+        message: `Your order #${order._id} has been placed successfully.`,
+        data: { orderId: order._id },
+      };
+
+      if (customer && customer.deviceToken) {
+        await sendPushNotification(
+          [customer.deviceToken],
+          customerNotificationMessage
+        );
+      }
+
+      // Save notification in the database for the customer
+      if (customer) {
+        await Notification.create({
+          title: customerNotificationMessage.title,
+          message: customerNotificationMessage.message,
+          recipientRole: "customer",
+          recipientId: customer._id,
+        });
+      }
 
       return res.status(200).json({
         resultMessage: getText("00096"),

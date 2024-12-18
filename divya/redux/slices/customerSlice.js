@@ -65,21 +65,24 @@ export const createCustomer = createAsyncThunk(
   }
 );
 
-// Update customer details
+// Update customer details 
 export const updateCustomer = createAsyncThunk(
   "customers/update",
   async ({ id, customerData }, { getState, rejectWithValue }) => {
     const state = getState();
     const token = getToken(state);
     try {
+      console.log(id)
       const response = await api.put(`/api/customers/${id}`, customerData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      console.log(response.data)
       return response.data.customer;
     } catch (error) {
+      console.error(error)
       return rejectWithValue(error.response.data.resultMessage);
     }
   }

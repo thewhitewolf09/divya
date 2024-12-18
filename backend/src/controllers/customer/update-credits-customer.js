@@ -55,9 +55,9 @@
  *         description: Internal server error.
  */
 
-
-import { Sale, Customer } from "../../models/index.js"; // Import both models
+import { Sale, Customer, User, Notification } from "../../models/index.js";
 import { errorHelper, getText } from "../../utils/index.js";
+import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
   const { customerId } = req.params; // Get customer ID from params
@@ -120,7 +120,7 @@ export default async (req, res) => {
       let remainingAmount = parseFloat(amountPaid.toFixed(2));
 
       for (const sale of creditSales) {
-        if (remainingAmount <= 0) break; 
+        if (remainingAmount <= 0) break;
 
         const saleOwed = parseFloat(sale.creditDetails.amountOwed.toFixed(2));
         if (remainingAmount >= saleOwed) {
@@ -146,6 +146,70 @@ export default async (req, res) => {
     await customer.save();
     for (const sale of creditSales) {
       await sale.save();
+    }
+
+    // Notifications
+    // Notify the customer
+    if (customer.deviceToken) {
+      const customerMessage = {
+        title: "Payment Update",
+        body:
+          paymentStatus === "paid"
+            ? "Your udhar payment has been confirmed as fully paid."
+            : `Your udhar payment of ₹${amountPaid} has been confirmed.`,
+        data: {
+          paymentStatus,
+          amountPaid,
+          totalBalance: customer.creditBalance,
+        },
+      };
+
+      await sendPushNotification([customer.deviceToken], customerMessage);
+
+      // Save customer notification in the database
+      await Notification.create({
+        title: customerMessage.title,
+        message: customerMessage.body,
+        recipientRole: "customer",
+        recipientId: customer._id,
+      });
+    }
+
+    // Notify the shop owner
+    const adminUsers = await User.find({
+      role: "shopOwner",
+      deviceToken: { $exists: true },
+    });
+    const adminDeviceTokens = adminUsers
+      .map((admin) => admin.deviceToken)
+      .filter(Boolean);
+
+    if (adminDeviceTokens.length > 0) {
+      const adminMessage = {
+        title: "Udhar Payment Received",
+        body:
+          paymentStatus === "paid"
+            ? `Customer ${customer.name} has paid their full udhar of ₹${totalOwed}.`
+            : `Customer ${customer.name} has paid ₹${amountPaid} towards their udhar.`,
+        data: {
+          customerId: customer._id,
+          customerName: customer.name,
+          paymentStatus,
+        },
+      };
+
+      await sendPushNotification(adminDeviceTokens, adminMessage);
+
+      // Save admin notifications in the database
+      const adminNotificationPromises = adminUsers.map((admin) =>
+        Notification.create({
+          title: adminMessage.title,
+          message: adminMessage.body,
+          recipientRole: "shopOwner",
+          recipientId: admin._id,
+        })
+      );
+      await Promise.all(adminNotificationPromises);
     }
 
     // Return the updated customer along with the credit details of the sales

@@ -1,15 +1,15 @@
-import {useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import CustomerHome from "../home/CustomerHome";
 import ShopOwnerHome from "../home/ShopOwnerHome";
 
 const Home = () => {
-  const { user } = useSelector((state) => state.user);
+  const { user, role } = useSelector((state) => state.user);
   return (
     <>
-      {user.role === "customer" ? (
-        <CustomerHome user={user} />
+      {role === "customer" ? (
+        <CustomerHome />
       ) : (
-        <ShopOwnerHome user={user} />
+        <ShopOwnerHome />
       )}
     </>
   );

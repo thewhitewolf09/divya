@@ -82,7 +82,7 @@ import { errorHelper, getText } from "../../utils/index.js";
 export default async (req, res) => {
   const { id } = req.params;
 
-  const user = await User.findById(id).catch((err) => {
+  const user = await User.findById(id).lean().catch((err) => {
     return res.status(500).json(errorHelper("00088", req, err.message));
   });
 

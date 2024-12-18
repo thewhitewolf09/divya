@@ -38,11 +38,11 @@ const NotificationScreen = () => {
   const { notifications, loading, error } = useSelector(
     (state) => state.notification
   );
-  const { user } = useSelector((state) => state.user);
+  const { user, role } = useSelector((state) => state.user);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchNotificationsHandler = async () => {
-    await dispatch(fetchNotifications({ role: user.role, id: user._id }));
+    await dispatch(fetchNotifications({ role, id: user._id }));
   };
 
   useFocusEffect(

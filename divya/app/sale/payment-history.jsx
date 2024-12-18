@@ -10,7 +10,7 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { useDispatch, useSelector } from "react-redux";
 import { getCustomerSales } from "../../redux/slices/saleSlice";
 import { ScrollView } from "react-native-gesture-handler";
@@ -22,9 +22,9 @@ const PaymentHistory = () => {
   const { sales, isLoading, error } = useSelector((state) => state.sale);
   const [refreshing, setRefreshing] = useState(false);
   const [activeSheet, setActiveSheet] = useState(null);
+  const [sortBy, setSortBy] = useState("dateNewestFirst");
 
   // Bottom sheet references
-  const filterSheetRef = useRef(null);
   const sortSheetRef = useRef(null);
 
   // Bottom sheet snap points
@@ -54,17 +54,15 @@ const PaymentHistory = () => {
     setActiveSheet(null);
   };
 
-  // Payment Filters and Sort Options
-  const handleOpenFilter = () => {
-    setActiveSheet("filter");
-    filterSheetRef.current?.expand();
-    sortSheetRef.current?.close();
-  };
-
   const handleOpenSort = () => {
     setActiveSheet("sort");
     sortSheetRef.current?.expand();
-    filterSheetRef.current?.close();
+  };
+
+  const handleSortChange = (newSort) => {
+    setSortBy(newSort);
+    sortSheetRef.current?.close();
+    handleCloseSheet();
   };
 
   const renderTransactionItem = ({ item }) => {
@@ -75,15 +73,15 @@ const PaymentHistory = () => {
         date: new Date(item.date),
         productDetails: [
           {
-            name: item.productId?.name || "Product 1", 
-            quantity: item.quantity, 
-            price: item.productId?.price, 
-            discount: item.productId?.discount || 0,  
-            tax: item.tax || 0,  
+            name: item.productId?.name || "Product 1",
+            quantity: item.quantity,
+            price: item.productId?.price,
+            discount: item.productId?.discount || 0,
+            tax: item.tax || 0,
           },
         ],
         customer: {
-          name: item.customerId?.name || "Customer Name", 
+          name: item.customerId?.name || "Customer Name",
           mobile: item.customerId?.mobile || "9876543210",
           address: {
             street: item.customerId?.address?.street || "123 Main St",
@@ -94,28 +92,36 @@ const PaymentHistory = () => {
           },
         },
         shopOwner: {
-          name: item.productId?.addedBy?.name || "Shop Owner",  
+          name: item.productId?.addedBy?.name || "Shop Owner",
           shopLocation: {
             address: {
-              street: item.productId?.addedBy?.shopLocation.address?.street || "456 Shop St",
-              city: item.productId?.addedBy?.shopLocation.address?.city || "Mumbai",
-              state: item.productId?.addedBy?.shopLocation.address?.state || "Maharashtra",
-              postalCode: item.productId?.addedBy?.shopLocation.address?.postalCode || "400002", 
-              country: item.productId?.addedBy?.shopLocation.address?.country || "India",
+              street:
+                item.productId?.addedBy?.shopLocation.address?.street ||
+                "456 Shop St",
+              city:
+                item.productId?.addedBy?.shopLocation.address?.city || "Mumbai",
+              state:
+                item.productId?.addedBy?.shopLocation.address?.state ||
+                "Maharashtra",
+              postalCode:
+                item.productId?.addedBy?.shopLocation.address?.postalCode ||
+                "400002",
+              country:
+                item.productId?.addedBy?.shopLocation.address?.country ||
+                "India",
             },
           },
         },
-        saleType: item.saleType || "membership",  
+        saleType: item.saleType || "membership",
         totalAmount: item.quantity * item.price,
-        paymentMethod: item.isCredit ? "Credit" : "Normal", 
-        paymentStatus: item.creditDetails?.paymentStatus || "Pending", 
+        paymentMethod: item.isCredit ? "Credit" : "Normal",
+        paymentStatus: item.creditDetails?.paymentStatus || "Pending",
         amountOwed: item.creditDetails?.amountOwed || 0,
       };
-    
+
       // Generate the receipt PDF dynamically
       await generateReciept(receiptData);
     };
-    
 
     return (
       <View className="bg-white border border-gray-300 shadow-lg rounded-lg m-2 p-4">
@@ -180,12 +186,31 @@ const PaymentHistory = () => {
     );
   };
 
-  // Create a sorted array of sales
   const sortedSales = useMemo(() => {
-    return (sales || [])
-      .slice()
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [sales]);
+    if (!sales) return [];
+    return sales.slice().sort((a, b) => {
+      if (sortBy === "amountHighToLow")
+        return b.quantity * b.price - a.quantity * a.price;
+      if (sortBy === "amountLowToHigh")
+        return a.quantity * a.price - b.quantity * b.price;
+      if (sortBy === "dateNewestFirst")
+        return new Date(b.date) - new Date(a.date);
+      if (sortBy === "dateOldestFirst")
+        return new Date(a.date) - new Date(b.date);
+      return 0;
+    });
+  }, [sales, sortBy]);
+
+  // Backdrop for the bottom sheet
+  const renderBackdrop = (props) => (
+    <BottomSheetBackdrop
+      {...props}
+      disappearsOnIndex={-1}
+      appearsOnIndex={0}
+      opacity={0.7}
+      pressBehavior="close"
+    />
+  );
 
   return (
     <SafeAreaView className="bg-white h-full">
@@ -221,15 +246,6 @@ const PaymentHistory = () => {
 
             {/* Filter & Sort Buttons */}
             <View className="flex flex-row space-x-3">
-              {/* Filter Button */}
-              <TouchableOpacity
-                className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
-                onPress={handleOpenFilter}
-              >
-                <Ionicons name="filter" size={18} color="#50B498" />
-                <Text className="ml-1 text-teal-600 font-semibold">Filter</Text>
-              </TouchableOpacity>
-
               {/* Sort Button */}
               <TouchableOpacity
                 className="flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
@@ -256,45 +272,31 @@ const PaymentHistory = () => {
         </View>
       </ScrollView>
 
-      {/* Filter Bottom Sheet */}
-      <BottomSheet
-        ref={filterSheetRef}
-        index={activeSheet === "filter" ? 0 : -1}
-        snapPoints={snapPoints}
-        onClose={handleCloseSheet}
-        enablePanDownToClose
-      >
-        <View className="p-4 bg-white rounded-t-lg shadow-lg">
-          <Text className="text-lg font-bold mb-4 text-teal-700">
-            Filter By
-          </Text>
-          {/* Filter Options */}
-          <TouchableOpacity className="py-3 border-b border-gray-200">
-            <Text className="text-gray-800">Date Range</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="py-3 border-b border-gray-200">
-            <Text className="text-gray-800">Payment Method</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheet>
-
       {/* Sort Bottom Sheet */}
       <BottomSheet
         ref={sortSheetRef}
         index={activeSheet === "sort" ? 0 : -1}
         snapPoints={snapPoints}
         onClose={handleCloseSheet}
+        backdropComponent={renderBackdrop}
         enablePanDownToClose
       >
         <View className="p-4 bg-white rounded-t-lg shadow-lg">
           <Text className="text-lg font-bold mb-4 text-teal-700">Sort By</Text>
-          {/* Sort Options */}
-          <TouchableOpacity className="py-3 border-b border-gray-200">
-            <Text className="text-gray-800">Amount (High to Low)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="py-3 border-b border-gray-200">
-            <Text className="text-gray-800">Date (Newest First)</Text>
-          </TouchableOpacity>
+          {[
+            { label: "Amount (High to Low)", value: "amountHighToLow" },
+            { label: "Amount (Low to High)", value: "amountLowToHigh" },
+            { label: "Date (Newest First)", value: "dateNewestFirst" },
+            { label: "Date (Oldest First)", value: "dateOldestFirst" },
+          ].map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() => handleSortChange(option.value)}
+              className="py-3 border-b border-gray-200"
+            >
+              <Text className="text-gray-800">{option.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </BottomSheet>
     </SafeAreaView>

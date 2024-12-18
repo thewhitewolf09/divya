@@ -145,7 +145,8 @@ import {
   errorHelper,
   logger,
   getText,
-  generateOTP, // Assume you have a utility to send OTPs via SMS
+  generateOTP,
+  sendOTP, // Assume you have a utility to send OTPs via SMS
 } from "../../../utils/index.js";
 import { validateRegister } from "../../../validators/user.validator.js";
 
@@ -252,7 +253,7 @@ export default async (req, res) => {
   });
 
   // Send OTP via SMS
-  // const otpSent = await sendOTP(mobile, otp).catch((err) => {
+  //  await sendOTP(mobile, otp).catch((err) => {
   //   return res.status(500).json(errorHelper("00036", req, err.message)); // "Failed to send OTP."
   // });
 

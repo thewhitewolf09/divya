@@ -7,6 +7,10 @@ import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerConfig from "./config/swagger.config.js";
+import cron from 'node-cron';
+import { sendUdharPaymentReminders } from "./reminders/sendUdharPaymentReminders.js";
+import { sendPickupReminders } from "./reminders/sendPickupReminders.js";
+import { sendMissedPickupAlerts } from "./reminders/sendMissedPickupAlerts.js";
 
 const app = express();
 
@@ -108,6 +112,16 @@ app.use(
     customCssUrl: CSS_URL,
   })
 );
+
+// Schedule daily Udhar payment reminders
+cron.schedule('0 9 * * *', sendUdharPaymentReminders); // Run daily at 9 AM
+
+// Schedule daily pickup reminders
+cron.schedule('0 8 * * *', sendPickupReminders); // Run daily at 8 AM
+
+// Schedule missed pickup alerts (every 12 hours)
+cron.schedule('0 */12 * * *', sendMissedPickupAlerts); // Run every 12 hours
+
 
 // Server Listening
 app.listen(port, (err) => {

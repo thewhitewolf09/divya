@@ -82,17 +82,18 @@
  *                   example: "00090"
  */
 
-
-
-import { Order, Sale, Customer } from "../../models/index.js"; // Import Order, Sale, and Customer models
+import { Order, Sale, Customer, User, Notification } from "../../models/index.js"; // Import Order, Sale, and Customer models
 import { errorHelper, getText } from "../../utils/index.js";
+import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
   const { orderId } = req.params;
 
   try {
     // Find the order by its ID
-    const order = await Order.findById(orderId).populate("products.productId");
+    const order = await Order.findById(orderId)
+      .populate("customerId")
+      .populate("products.productId");
 
     // If the order doesn't exist, return a 404 error
     if (!order) {
@@ -118,11 +119,15 @@ export default async (req, res) => {
     }
 
     // Gather sale IDs from the order products
-    const saleIds = order.products.map(product => product.saleId).filter(saleId => saleId);
+    const saleIds = order.products
+      .map((product) => product.saleId)
+      .filter((saleId) => saleId);
 
     // Find and update associated sales and customers
     if (saleIds.length > 0) {
-      const sales = await Sale.find({ _id: { $in: saleIds } }).populate("customerId");
+      const sales = await Sale.find({ _id: { $in: saleIds } }).populate(
+        "customerId"
+      );
 
       for (const sale of sales) {
         if (sale.customerId) {
@@ -138,11 +143,64 @@ export default async (req, res) => {
         // Delete the sale record
         await Sale.deleteOne({ _id: sale._id });
       }
-    } 
+    }
 
     // Update the order status to 'Cancelled'
     order.status = "Cancelled";
     const canceledOrder = await order.save();
+
+    // Notifications
+    // Notify the customer
+    if (order.customerId && order.customerId.deviceToken) {
+      const customerMessage = {
+        title: "Order Canceled",
+        body: `Your order #${order._id} has been canceled.`,
+        data: { orderId: order._id },
+      };
+
+      await sendPushNotification(
+        [order.customerId.deviceToken],
+        customerMessage
+      );
+
+      // Save customer notification in the database
+      await Notification.create({
+        title: customerMessage.title,
+        message: customerMessage.body,
+        recipientRole: "customer",
+        recipientId: order.customerId._id,
+      });
+    }
+
+    // Notify the shop owner
+    const adminUsers = await User.find({
+      role: "shopOwner",
+      deviceToken: { $exists: true },
+    });
+    const adminDeviceTokens = adminUsers
+      .map((admin) => admin.deviceToken)
+      .filter(Boolean);
+
+    if (adminDeviceTokens.length > 0) {
+      const adminMessage = {
+        title: "Order Canceled",
+        body: `Order #${order._id} has been canceled by the customer.`,
+        data: { orderId: order._id },
+      };
+
+      await sendPushNotification(adminDeviceTokens, adminMessage);
+
+      // Save admin notifications in the database
+      const adminNotificationPromises = adminUsers.map((admin) =>
+        Notification.create({
+          title: adminMessage.title,
+          message: adminMessage.body,
+          recipientRole: "shopOwner",
+          recipientId: admin._id,
+        })
+      );
+      await Promise.all(adminNotificationPromises);
+    }
 
     // Return the canceled order details
     return res.status(200).json({

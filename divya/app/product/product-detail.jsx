@@ -29,14 +29,14 @@ import {
   addItemToCart,
   getCart,
   removeItemFromCart,
-} from "../../redux/slices/cartSlice"; 
+} from "../../redux/slices/cartSlice";
 
 const ProductDetails = () => {
   const dispatch = useDispatch();
   const { productId } = useLocalSearchParams();
   const navigation = useNavigation();
   const { product, loading, error } = useSelector((state) => state.product);
-  const { user } = useSelector((state) => state.user);
+  const { user, role } = useSelector((state) => state.user);
   const { cart } = useSelector((state) => state.cart); // Access the cart from Redux
   const [refreshing, setRefreshing] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
@@ -44,7 +44,6 @@ const ProductDetails = () => {
   const [showVariantModal, setShowVariantModal] = useState(false); // Modal state
   const [selectedVariant, setSelectedVariant] = useState(null); // Track selected variant
   const [isOrder, setIsOrder] = useState(false);
-
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -252,7 +251,7 @@ const ProductDetails = () => {
             </View>
           )}
           {/* Add to Cart Button */}
-          {user.role === "customer" ? (
+          {role === "customer" ? (
             <TouchableOpacity
               onPress={handleAddToCart}
               disabled={cartLoading}
@@ -335,7 +334,7 @@ const ProductDetails = () => {
         </View>
 
         {/* Conditional Rendering for Customer Role */}
-        {user.role === "customer" ? (
+        {role === "customer" ? (
           <View className="flex-row justify-evenly mt-4 mb-4">
             {/* Add to Cart Button */}
             <TouchableOpacity

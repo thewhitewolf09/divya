@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   FlatList,
@@ -15,7 +15,7 @@ import { SearchInput, Loader } from "../../components";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { fetchAllProducts } from "../../redux/slices/productSlice";
 import { useSelector, useDispatch } from "react-redux";
 import FilterComponentProduct from "../../components/FilterComponentProduct";
@@ -23,11 +23,26 @@ import SortComponentProduct from "../../components/SortComponentProduct";
 
 const Product = () => {
   const dispatch = useDispatch();
+  const { filters } = useLocalSearchParams();
   const { products, loading, error } = useSelector((state) => state.product);
   const { user } = useSelector((state) => state.user);
   const [refreshing, setRefreshing] = useState(false);
   const [filteredResults, setFilteredResults] = useState([]);
   const [filterApplied, setFilterApplied] = useState(false);
+  const [filtersThroughParams, setFiltersThroughParams] = useState({});
+
+  useEffect(() => {
+    if (filters) {
+      try {
+        const parsedFilters = JSON.parse(filters);
+        setFiltersThroughParams(parsedFilters);
+        router.replace("/products");
+      } catch (error) {
+        console.error("Error parsing or applying filters:", error);
+      }
+    }
+  }, [filters]);
+
 
   // References to control the bottom sheet
   const [activeSheet, setActiveSheet] = useState(null);
@@ -57,6 +72,22 @@ const Product = () => {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        await dispatch(
+          fetchAllProducts({ filters: filtersThroughParams })
+        ).unwrap();
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      } finally {
+        setRefreshing(false);
+      }
+    };
+
+    fetchProducts();
+  }, [filtersThroughParams]);
 
   useFocusEffect(
     useCallback(() => {
@@ -125,7 +156,7 @@ const Product = () => {
         <FlatList
           data={filteredResults}
           keyExtractor={(item) => item._id}
-          numColumns={2} // Display two products in a row
+          numColumns={2}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -159,11 +190,15 @@ const Product = () => {
                       <View className="flex flex-row">
                         {/* Show discounted price */}
                         <Text className="text-gray-800 font-bold mr-1">
-                          ₹{item.price}
+                          ₹
+                          {(
+                            item.price -
+                            (item.price * item.discount) / 100
+                          ).toFixed(2)}
                         </Text>
                         {/* Show original price crossed out */}
                         <Text className="text-gray-500 text-sm line-through">
-                          ₹{(item.price / (1 - item.discount / 100)).toFixed(2)}
+                          ₹{item.price}
                         </Text>
                       </View>
                     </>

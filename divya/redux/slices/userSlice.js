@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../lib/axios";
+import { act } from "react";
 
 const getToken = (state) => state.user.token;
 
@@ -81,13 +82,33 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
+// Async Thunk for fetching the shop list
+export const fetchShopList = createAsyncThunk(
+  "user/fetchShopList",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/api/users/shops/shop-list");
+      return response.data.shops;
+    } catch (error) {
+      return rejectWithValue(error.response.data.resultMessage); // Handle errors
+    }
+  }
+);
+
 // Async Thunk for updating a user by ID
 export const updateUser = createAsyncThunk(
   "user/updateUser",
-  async ({ userId, updateData }, { rejectWithValue }) => {
+  async ({ userId, userData }, { getState, rejectWithValue }) => {
+    const state = getState();
+    const token = getToken(state);
+
     try {
-      const response = await api.patch(`/api/users/${userId}`, updateData);
-      return response.data;
+      const response = await api.put(`/api/users/${userId}`, userData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.user;
     } catch (error) {
       return rejectWithValue(error.response.data.resultMessage); // Handle errors
     }
@@ -137,6 +158,8 @@ const userSlice = createSlice({
   initialState: {
     user: null,
     token: null,
+    role: "shopOwner",
+    shops: [],
     otpSent: false,
     verified: false,
     loading: false,
@@ -175,8 +198,6 @@ const userSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-
-        console.log(action.payload);
       })
 
       // Send OTP actions
@@ -199,6 +220,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.verified = true;
         state.user = action.payload.user;
+        state.role = action.payload.user.role;
         state.token = action.payload.accessToken;
       })
       .addCase(verifyOtpUser.rejected, (state, action) => {
@@ -215,6 +237,19 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(fetchUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch Shops actions
+      .addCase(fetchShopList.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchShopList.fulfilled, (state, action) => {
+        state.loading = false;
+        state.shops = action.payload;
+      })
+      .addCase(fetchShopList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

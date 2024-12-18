@@ -9,6 +9,7 @@ import {
   fetchUser,
   updateUser,
   updateShopTimings,
+  fetchShops,
 } from "../controllers/user/index.js";
 
 const router = Router();
@@ -20,9 +21,12 @@ router.post("/verify-otp", verifyOtp);
 router.post("/send-otp", sendOtp);
 
 router.get("/:id", fetchUser);
-router.patch("/:id", auth, updateUser);
+router.put("/:id", auth, updateUser);
 router.patch("/:id/shop-timing", auth, updateShopTimings);
 router.delete("/:id", auth, deleteUser);
+
+router.get("/shops/shop-list", fetchShops)
+
 
 
 export default router;

@@ -163,10 +163,9 @@
  *                   example: "00090"
  */
 
-
-
-import { Order } from "../../models/index.js"; // Import Order model
+import { Notification, Order } from "../../models/index.js"; // Import Order model
 import { errorHelper, getText } from "../../utils/index.js";
+import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
   const { orderId } = req.params;
@@ -174,7 +173,9 @@ export default async (req, res) => {
 
   try {
     // Find the order by its ID
-    const order = await Order.findById(orderId).populate('customerId').populate('products.productId');
+    const order = await Order.findById(orderId)
+      .populate("customerId")
+      .populate("products.productId");
 
     // If the order doesn't exist, return a 404 error
     if (!order) {
@@ -187,6 +188,55 @@ export default async (req, res) => {
     // Update order status, payment status, or delivery address if provided in the request body
     if (status) {
       order.status = status;
+
+      // Check if the order is being shipped or delivered
+      if (status === "Shipped") {
+        // Notify the customer when the order is shipped
+        if (order.customerId && order.customerId.deviceToken) {
+          const customerMessage = {
+            title: "Your Order is Shipped",
+            body: `Your order #${order._id} has been shipped and is on its way.`,
+            data: { orderId: order._id },
+          };
+
+          // Send push notification to the customer
+          await sendPushNotification(
+            [order.customerId.deviceToken],
+            customerMessage
+          );
+
+          // Save customer notification to the database
+          await Notification.create({
+            title: customerMessage.title,
+            message: customerMessage.body,
+            recipientRole: "customer",
+            recipientId: order.customerId._id,
+          });
+        }
+      } else if (status === "Delivered") {
+        // Notify the customer when the order is delivered
+        if (order.customerId && order.customerId.deviceToken) {
+          const customerMessage = {
+            title: "Your Order is Delivered",
+            body: `Your order #${order._id} has been successfully delivered. Enjoy your purchase!`,
+            data: { orderId: order._id },
+          };
+
+          // Send push notification to the customer
+          await sendPushNotification(
+            [order.customerId.deviceToken],
+            customerMessage
+          );
+
+          // Save customer notification to the database
+          await Notification.create({
+            title: customerMessage.title,
+            message: customerMessage.body,
+            recipientRole: "customer",
+            recipientId: order.customerId._id,
+          });
+        }
+      }
     }
 
     if (paymentStatus) {
