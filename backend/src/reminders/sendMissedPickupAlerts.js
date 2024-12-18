@@ -1,4 +1,3 @@
-import { getText } from "../../utils/index.js";
 import { Customer, Notification } from "../models/index.js";
 import { sendPushNotification } from "../utils/sendNotification.js";
 
