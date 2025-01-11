@@ -103,13 +103,12 @@
  *                   description: Error code
  */
 
-
-import { Sale } from '../../models/index.js';
-import { errorHelper, getText } from '../../utils/index.js';
+import { Sale } from "../../models/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 // Helper function to parse date in DD/MM/YYYY format
 const parseDate = (dateString) => {
-  const [day, month, year] = dateString.split('/');
+  const [day, month, year] = dateString.split("/");
   return new Date(`${year}-${month}-${day}`);
 };
 
@@ -119,8 +118,8 @@ export default async (req, res) => {
   // Ensure both startDate and endDate are provided
   if (!startDate || !endDate) {
     return res.status(400).json({
-      resultMessage: getText('00026'), // Missing date range
-      resultCode: '00026',
+      resultMessage: "Missing date range.",
+      resultCode: "00026",
     });
   }
 
@@ -132,8 +131,8 @@ export default async (req, res) => {
     // Check if parsed dates are valid
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return res.status(400).json({
-        resultMessage: getText('00027'), // Invalid date format message
-        resultCode: '00027',
+        resultMessage: "Invalid date format.",
+        resultCode: "00027",
       });
     }
 
@@ -146,12 +145,16 @@ export default async (req, res) => {
     });
 
     return res.status(200).json({
-      resultMessage: getText('00096'), // Sales data fetched successfully
-      resultCode: '00096',
-      sales,  // Return sales data directly
+      resultMessage: "Sales data fetched successfully.",
+      resultCode: "00096",
+      sales, // Return sales data directly
     });
   } catch (err) {
-    console.error('Error fetching sales by date range:', err);
-    return res.status(500).json(errorHelper('00090', req, err.message)); // Error handling
+    console.error("Error fetching sales by date range:", err);
+    return res.status(500).json({
+      resultMessage: "An error occurred while fetching sales data.",
+      resultCode: "00090",
+      error: err.message,
+    });
   }
 };

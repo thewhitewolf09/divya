@@ -77,14 +77,11 @@
  *         description: Internal server error.
  */
 
-
-import { Customer } from '../../models/index.js';
-import { errorHelper, getText, generateOTP, logger } from '../../utils/index.js'; // Assuming you are using the same utilities as in the register controller
+import { Customer } from "../../models/index.js";
+import { errorHelper, generateOTP, logger } from "../../utils/index.js"; // Assuming you are using the same utilities as in the register controller
 
 export default async (req, res) => {
   const addedBy = req.user._id;
-  console.log(req.body)
-
 
   const {
     name,
@@ -95,15 +92,21 @@ export default async (req, res) => {
     notes,
   } = req.body;
 
-
   try {
     // Check if the customer already exists based on the mobile number
     const existingCustomer = await Customer.exists({ mobile }).catch((err) => {
-      return res.status(500).json(errorHelper("00031", req, err.message));
+      return res.status(500).json({
+        resultMessage: "Internal server error while checking existing customer", // Error message
+        resultCode: "00031",
+        error: err.message,
+      });
     });
 
     if (existingCustomer) {
-      return res.status(409).json(errorHelper("00027", req)); // "Customer already exists."
+      return res.status(409).json({
+        resultMessage: "Customer already exists", // "Customer already exists." error message
+        resultCode: "00027",
+      });
     }
 
     // Generate OTP
@@ -113,7 +116,7 @@ export default async (req, res) => {
     // Create a new customer object
     const newCustomer = new Customer({
       name,
-      mobile, 
+      mobile,
       whatsappNumber,
       email,
       address,
@@ -126,14 +129,24 @@ export default async (req, res) => {
 
     // Save the customer in the database
     const savedCustomer = await newCustomer.save().catch((err) => {
-      return res.status(500).json(errorHelper("00034", req, err.message));
+      return res.status(500).json({
+        resultMessage: "Internal server error while saving the customer", // Error message
+        resultCode: "00034",
+        error: err.message,
+      });
     });
 
     // Log the customer registration
-    logger("00035", savedCustomer._id, getText("00035"), "Info", req); // "Customer created successfully."
+    logger(
+      "00035",
+      savedCustomer._id,
+      "Customer created successfully.",
+      "Info",
+      req
+    ); // "Customer created successfully."
 
     return res.status(201).json({
-      resultMessage: getText("00035"), // Customer created successfully
+      resultMessage: "Customer created successfully", // Customer created successfully message
       resultCode: "00035",
       customer: {
         name: savedCustomer.name,
@@ -144,6 +157,10 @@ export default async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating customer:", err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "Error creating customer", // General error message
+      resultCode: "00090",
+      error: err.message,
+    }); // Error handling
   }
 };

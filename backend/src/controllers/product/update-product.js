@@ -104,11 +104,8 @@
  *                   example: "00008"
  */
 
-
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
@@ -117,8 +114,9 @@ export default async (req, res) => {
 
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"),
-      resultCode: "00022",
+      resultMessage:
+        "No product ID provided. Please provide a valid product ID.",
+      resultCode: "40001", // Custom error code for missing product ID
     });
   }
 
@@ -127,18 +125,19 @@ export default async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00052"),
-        resultCode: "00052",
+        resultMessage: "Product not found. Please check the product ID.",
+        resultCode: "40401", // Custom error code for product not found
       });
     }
 
     if (product.addedBy.toString() !== userId.toString()) {
       return res.status(403).json({
-        resultMessage: getText("00017"),
-        resultCode: "00017",
+        resultMessage: "You are not authorized to update this product.",
+        resultCode: "40301", // Custom error code for unauthorized access
       });
     }
 
+    // Apply updates to the product
     Object.keys(updates).forEach((key) => {
       if (updates[key] !== undefined) {
         product[key] = updates[key];
@@ -148,12 +147,12 @@ export default async (req, res) => {
     const updatedProduct = await product.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Product updated successfully.",
+      resultCode: "20001", // Custom success code for successful update
       product: updatedProduct,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00008", req, err.message));
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Custom error code for server errors
   }
 };

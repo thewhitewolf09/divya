@@ -79,7 +79,7 @@
 
 
 import { Sale } from '../../models/index.js';
-import { errorHelper, getText } from '../../utils/index.js';
+import { errorHelper } from '../../utils/index.js';
 
 export default async (req, res) => {
   try {
@@ -90,18 +90,23 @@ export default async (req, res) => {
 
     if (sales.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00091"), // No sales found
+        resultMessage: "No sales found. Please check again.",
         resultCode: "00091",
       });
     }
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success
+      resultMessage: "Sales fetched successfully.",
       resultCode: "00089",
       sales: sales,
     });
   } catch (err) {
     console.error('Error fetching sales:', err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "An error occurred while fetching the sales.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Error handling
   }
 };
+

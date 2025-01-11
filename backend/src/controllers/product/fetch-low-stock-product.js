@@ -39,26 +39,30 @@
  *                   example: "00090"
  */
 
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 const LOW_STOCK_THRESHOLD = 10;
 
 export default async (req, res) => {
   try {
+    // Fetch products with stock quantity below the low stock threshold
     const lowStockProducts = await Product.find({
       stockQuantity: { $lt: LOW_STOCK_THRESHOLD },
     });
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Low stock products fetched successfully.",
+      resultCode: "20001", // Custom code for success
       products: lowStockProducts,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error fetching low stock products:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while fetching low stock products.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };

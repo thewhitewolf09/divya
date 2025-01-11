@@ -71,40 +71,42 @@
  *                   description: Error code.
  */
 
-
-
 import { Cart } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
-  const { customerId } = req.params; 
+  const { customerId } = req.params;
 
   // Validate required fields
   if (!customerId) {
     return res.status(400).json({
-      resultMessage: getText("00025"), 
+      resultMessage: "Customer ID is required in the request.",
       resultCode: "00025",
     });
   }
 
   try {
     // Find the cart for the specified customer
-    const cart = await Cart.findOne({ customerId }).populate('items.productId'); 
+    const cart = await Cart.findOne({ customerId }).populate("items.productId");
 
     if (!cart) {
       return res.status(404).json({
-        resultMessage: getText("00027"), // Message indicating that the cart does not exist
+        resultMessage: "Cart not found for the specified customer.",
         resultCode: "00027",
       });
     }
 
     return res.status(200).json({
-      resultMessage: getText("00088"), // Message for successful retrieval
+      resultMessage: "Cart retrieved successfully.",
       resultCode: "00088",
       cart, // Include the cart details in the response
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Handle unexpected errors
+    return res.status(500).json({
+      resultMessage: "An error occurred while retrieving the cart.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Handle unexpected errors
   }
 };

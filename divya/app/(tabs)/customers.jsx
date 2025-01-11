@@ -82,7 +82,7 @@ const CustomerList = () => {
               Customers
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.replace("/notifications")}>
+          <TouchableOpacity onPress={() => router.push("/notifications")}>
             <View className="mt-1.5">
               <Ionicons name="notifications" size={24} color="#0f766e" />
             </View>
@@ -208,7 +208,7 @@ const CustomerList = () => {
             title=" Add Customer"
             icon="person-add"
             colors={["#DEF9C4", "#9CDBA6"]}
-            onPress={() => router.replace("/customer/add-customer")}
+            onPress={() => router.push("/customer/add-customer")}
           />
         </View>
       </View>

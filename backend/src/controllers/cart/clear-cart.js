@@ -71,11 +71,8 @@
  *                   description: Error code.
  */
 
-
-
-
 import { Cart } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId } = req.params; // Assuming customerId is passed as a URL parameter
@@ -83,7 +80,7 @@ export default async (req, res) => {
   // Validate required field
   if (!customerId) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Message for missing customerId
+      resultMessage: "Customer ID is required in the request.",
       resultCode: "00025",
     });
   }
@@ -93,7 +90,7 @@ export default async (req, res) => {
     const cart = await Cart.findOne({ customerId });
     if (!cart) {
       return res.status(404).json({
-        resultMessage: getText("00028"), // Message indicating the cart does not exist
+        resultMessage: "Cart not found for the given customer.",
         resultCode: "00028",
       });
     }
@@ -106,12 +103,16 @@ export default async (req, res) => {
     const updatedCart = await cart.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Message for successful clearance
+      resultMessage: "Cart cleared successfully.",
       resultCode: "00089",
       cart: updatedCart, // Include the updated cart details in the response
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Handle unexpected errors
+    return res.status(500).json({
+      resultMessage: "An error occurred while clearing the cart.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Handle unexpected errors
   }
 };

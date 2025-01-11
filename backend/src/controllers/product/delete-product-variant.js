@@ -92,18 +92,17 @@
  *                   example: "00090"
  */
 
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id, variantId } = req.params;
 
   if (!id || !variantId) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "No id provided in params. Please enter an id."
-      resultCode: "00022",
+      resultMessage:
+        "Product ID and Variant ID are required in the request parameters.",
+      resultCode: "40001", // Custom code for missing parameters
     });
   }
 
@@ -111,8 +110,8 @@ export default async (req, res) => {
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // "Product not found."
-        resultCode: "00052",
+        resultMessage: "Product not found. Please provide a valid Product ID.",
+        resultCode: "40401", // Custom code for product not found
       });
     }
 
@@ -123,8 +122,8 @@ export default async (req, res) => {
 
     if (variantIndex === -1) {
       return res.status(404).json({
-        resultMessage: getText("00053"), // "Variant not found."
-        resultCode: "00053",
+        resultMessage: "Variant not found. Please provide a valid Variant ID.",
+        resultCode: "40402", // Custom code for variant not found
       });
     }
 
@@ -134,12 +133,17 @@ export default async (req, res) => {
     const updatedProduct = await product.save();
 
     return res.status(200).json({
-      resultMessage: getText("00092"), // "Variant deleted successfully."
-      resultCode: "00092",
+      resultMessage: "Variant deleted successfully.",
+      resultCode: "20001", // Custom code for successful operation
       product: updatedProduct,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error while deleting variant:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while attempting to delete the variant.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };

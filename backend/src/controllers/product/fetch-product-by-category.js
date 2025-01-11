@@ -70,31 +70,37 @@
  *                   example: "00090"
  */
 
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 // Get Products by Category API
 export default async (req, res) => {
   const { category } = req.params;
 
+  // Check if category is provided in the request params
   if (!category) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "No category provided in params."
-      resultCode: "00022",
+      resultMessage: "No category provided in params.",
+      resultCode: "40001", // Custom code for missing category
     });
   }
 
   try {
+    // Fetch products based on the provided category
     const products = await Product.find({ category });
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Products fetched successfully.",
+      resultCode: "20001", // Custom code for success
       products,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error fetching products by category:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while fetching products.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };

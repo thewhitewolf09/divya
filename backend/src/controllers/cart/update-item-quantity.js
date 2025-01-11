@@ -89,20 +89,18 @@
  *                   description: Error code.
  */
 
-
-
 import { Cart } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId, productId } = req.params; // Assuming customerId and productId are passed as URL parameters
   const { quantity } = req.body; // Expecting quantity in the request body
 
-
   // Validate required fields
   if (!customerId || !productId || quantity === undefined) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Message for missing fields
+      resultMessage:
+        "Customer ID, Product ID, and Quantity are required in the request.",
       resultCode: "00025",
     });
   }
@@ -110,39 +108,39 @@ export default async (req, res) => {
   // Check if the quantity is valid
   if (quantity < 1) {
     return res.status(400).json({
-      resultMessage: getText("00026"), // Message for invalid quantity
+      resultMessage: "Quantity must be greater than or equal to 1.",
       resultCode: "00026",
     });
   }
 
   try {
     // Find the cart for the specified customer
-    const cart = await Cart.findOne({ customerId }).populate('items.productId'); 
-    
+    const cart = await Cart.findOne({ customerId }).populate("items.productId");
+
     if (!cart) {
       return res.status(404).json({
-        resultMessage: getText("00028"), // Message indicating the cart does not exist
+        resultMessage: "Cart not found for the specified customer.",
         resultCode: "00028",
       });
     }
 
-
     // Find the item in the cart
-    const itemIndex = cart.items.findIndex(item => item._id.toString() === productId);
-
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productId._id.toString() === productId
+    );
 
     if (itemIndex === -1) {
       return res.status(404).json({
-        resultMessage: getText("00029"), // Message indicating the item does not exist in the cart
+        resultMessage: "Product not found in the cart.",
         resultCode: "00029",
       });
     }
 
     // Update the item's quantity
     const existingItem = cart.items[itemIndex];
-    const previousQuantity = existingItem.quantity; 
+    const previousQuantity = existingItem.quantity;
     existingItem.quantity = quantity;
-    
+
     // Update total amount based on the change in quantity
     const priceDifference = existingItem.price * (quantity - previousQuantity);
     cart.totalAmount += priceDifference;
@@ -150,16 +148,17 @@ export default async (req, res) => {
     // Save the updated cart
     const updatedCart = await cart.save();
 
-
-
-
     return res.status(200).json({
-      resultMessage: getText("00089"), // Message for successful update
+      resultMessage: "Cart updated successfully.",
       resultCode: "00089",
-      cart,
+      cart: updatedCart,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Handle unexpected errors
+    return res.status(500).json({
+      resultMessage: "An error occurred while updating the cart.",
+      resultCode: "00090",
+      error: err.message,
+    });
   }
 };

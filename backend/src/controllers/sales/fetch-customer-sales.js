@@ -105,14 +105,14 @@
 
 
 import { Sale } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId } = req.params;
 
   if (!customerId) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Invalid customer ID
+      resultMessage: "Invalid customer ID.",
       resultCode: "00025",
     });
   }
@@ -121,26 +121,30 @@ export default async (req, res) => {
     const customerSales = await Sale.find({ customerId })
       .populate({
         path: "productId",
-        populate: { path: "addedBy"}, 
+        populate: { path: "addedBy" }, 
       })
       .populate("customerId")
       .exec();
 
     if (customerSales.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00091"), // No sales found for this customer
+        resultMessage: "No sales found for this customer.",
         resultCode: "00091",
       });
     }
 
     // Return the raw customer sales data without formatting
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success message
+      resultMessage: "Sales fetched successfully.",
       resultCode: "00089",
       sales: customerSales,
     });
   } catch (err) {
     console.error("Error fetching customer sales:", err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "An error occurred while fetching customer sales.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Error handling
   }
 };

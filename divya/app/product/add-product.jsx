@@ -163,7 +163,7 @@ const AddProduct = () => {
 
           // Handle image upload success/failure
           if (uploadProductImage.fulfilled.match(imageUploadResult)) {
-            router.replace("/home");
+            router.push("/home");
             Alert.alert("Success", "Product and image uploaded successfully!");
           } else {
             Alert.alert("Error", "Product added but image upload failed.");
@@ -173,7 +173,7 @@ const AddProduct = () => {
         }
 
         // Redirect or navigate back
-        //router.replace("/home");
+        //router.push("/home");
       } else {
         Alert.alert("Error", resultAction.payload || "Failed to add product.");
       }
@@ -190,13 +190,7 @@ const AddProduct = () => {
       <ScrollView>
         <View className="flex-row items-center mb-6">
           <TouchableOpacity
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.push("/home");
-              }
-            }}
+            onPress={() => router.back()}
             style={{ marginRight: 5 }}
           >
             <Ionicons name="chevron-back" size={24} color="teal" />

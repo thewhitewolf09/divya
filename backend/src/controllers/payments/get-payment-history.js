@@ -69,11 +69,8 @@
  *               type: string
  */
 
-
-
-
 import { Payment } from "../../models/index.js"; // Import Payment model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const customerId = req.user._id; // Assuming customer ID is retrieved from the authenticated user session
@@ -84,19 +81,19 @@ export default async (req, res) => {
 
     if (!payments || payments.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00102"), // "No payment history found"
-        resultCode: "00102",
+        resultMessage: "No payment history found for this customer.",
+        resultCode: "40401", // Custom error code for no payment history
       });
     }
 
     // Respond with the payment history
     return res.status(200).json({
-      resultMessage: getText("00103"), // "Payment history retrieved successfully"
-      resultCode: "00103",
+      resultMessage: "Payment history retrieved successfully.",
+      resultCode: "20001", // Custom success code for successful retrieval
       payments,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Internal server error response
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Custom error code for server errors
   }
 };

@@ -30,6 +30,7 @@ const ShopOwnerHome = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [weeklySales, setWeeklySales] = useState([0, 0, 0, 0]);
 
+
   const [dashboardData, setDashboardData] = useState({
     totalSales: 10000,
     totalUdhar: 5000,
@@ -222,7 +223,7 @@ const ShopOwnerHome = () => {
                 {user?.name}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => router.replace("/notifications")}>
+            <TouchableOpacity onPress={() => router.push("/notifications")}>
               <View className="mt-1.5">
                 <Ionicons name="notifications" size={24} color="#0f766e" />
               </View>
@@ -286,7 +287,7 @@ const ShopOwnerHome = () => {
 
             <TouchableOpacity
               onPress={() => {
-                router.replace("/sale/sales-performance");
+                router.push("/sale/sales-performance");
               }}
               className="flex flex-row items-center justify-end w-full mt-4"
             >
@@ -302,22 +303,22 @@ const ShopOwnerHome = () => {
             <ActionButton
               title="🛒 Add Sale"
               colors={["#DEF9C4", "#9CDBA6"]}
-              onPress={() => router.replace("/sale/product-selection-for-sale")}
+              onPress={() => router.push("/sale/product-selection-for-sale")}
             />
             <ActionButton
               title="🛒 Sales History"
               colors={["#9CDBA6", "#50B498"]}
-              onPress={() => router.replace("/sale/sales-history")}
+              onPress={() => router.push("/sale/sales-history")}
             />
             <ActionButton
               title="👤 Add Customer"
               colors={["#50B498", "#468585"]}
-              onPress={() => router.replace("/customer/add-customer")}
+              onPress={() => router.push("/customer/add-customer")}
             />
             <ActionButton
               title="📦 Add Product"
               colors={["#468585", "#DEF9C4"]}
-              onPress={() => router.replace("/product/add-product")}
+              onPress={() => router.push("/product/add-product")}
             />
           </View>
 
@@ -381,7 +382,7 @@ const ShopOwnerHome = () => {
             {/* View Details Button in the Bottom-Right Corner */}
             <TouchableOpacity
               onPress={() => {
-                router.replace("/track-daily-items");
+                router.push("/track-daily-items");
               }}
               className="flex flex-row items-center justify-end w-full mt-4"
             >
@@ -432,7 +433,7 @@ const ShopOwnerHome = () => {
 
             <TouchableOpacity
               onPress={() => {
-                router.replace("/customer-credit");
+                router.push("/customer-credit");
               }}
               className="flex flex-row items-center justify-end w-full mt-4"
             >

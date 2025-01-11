@@ -105,11 +105,8 @@
  *                   example: "00090"
  */
 
-
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 // Bulk Update Products API
 export default async (req, res) => {
@@ -117,8 +114,9 @@ export default async (req, res) => {
 
   if (!Array.isArray(updates) || updates.length === 0) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "Invalid update data provided."
-      resultCode: "00022",
+      resultMessage:
+        "Invalid update data provided. Ensure you send an array of product updates.",
+      resultCode: "40001", // Custom code for invalid input
     });
   }
 
@@ -126,12 +124,13 @@ export default async (req, res) => {
     // Create an array of update promises
     const updatePromises = updates.map(async (update) => {
       const { _id, ...updateFields } = update;
-      
+
       if (!_id || Object.keys(updateFields).length === 0) {
         return {
           _id,
           success: false,
-          message: "Invalid data for product update."
+          message:
+            "Invalid data for product update. Ensure the product ID and at least one field to update are provided.",
         };
       }
 
@@ -141,12 +140,12 @@ export default async (req, res) => {
           return {
             _id,
             success: false,
-            message: "Product not found."
+            message: "Product not found for the provided ID.",
           };
         }
 
         // Update the product fields
-        Object.keys(updateFields).forEach(key => {
+        Object.keys(updateFields).forEach((key) => {
           if (updateFields[key] !== undefined) {
             product[key] = updateFields[key];
           }
@@ -157,14 +156,14 @@ export default async (req, res) => {
         return {
           _id,
           success: true,
-          message: "Product updated successfully."
+          message: "Product updated successfully.",
         };
       } catch (err) {
-        console.error(err);
+        console.error(`Error updating product with ID ${_id}:`, err);
         return {
           _id,
           success: false,
-          message: "Failed to update product."
+          message: "An error occurred while updating the product.",
         };
       }
     });
@@ -173,19 +172,22 @@ export default async (req, res) => {
     const results = await Promise.all(updatePromises);
 
     // Separate successful and failed updates
-    const successes = results.filter(result => result.success);
-    const failures = results.filter(result => !result.success);
+    const successes = results.filter((result) => result.success);
+    const failures = results.filter((result) => !result.success);
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // "Bulk update completed."
-      resultCode: "00089",
+      resultMessage: "Bulk update completed. Review successes and failures.",
+      resultCode: "20001", // Custom code for successful bulk update
       successes,
-      failures
+      failures,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error in bulk update operation:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred during the bulk update operation.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };
-
- 

@@ -70,19 +70,16 @@
  *                   example: "00008"
  */
 
-
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
 
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"),
-      resultCode: "00022",
+      resultMessage: "No product ID provided.",
+      resultCode: "40001", // Custom error code
     });
   }
 
@@ -91,18 +88,22 @@ export default async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00052"),
-        resultCode: "00052",
+        resultMessage: "Product not found.",
+        resultCode: "40401", // Custom error code
       });
     }
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Product fetched successfully.",
+      resultCode: "20001", // Custom success code
       product,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00008", req, err.message));
+    return res.status(500).json({
+      resultMessage: "An error occurred while fetching the product.",
+      resultCode: "50001", // Custom error code
+      error: err.message,
+    });
   }
 };

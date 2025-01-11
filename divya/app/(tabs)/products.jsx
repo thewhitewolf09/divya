@@ -36,7 +36,7 @@ const Product = () => {
       try {
         const parsedFilters = JSON.parse(filters);
         setFiltersThroughParams(parsedFilters);
-        router.replace("/products");
+        router.push("/products");
       } catch (error) {
         console.error("Error parsing or applying filters:", error);
       }
@@ -111,7 +111,7 @@ const Product = () => {
               Products
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.replace("/notifications")}>
+          <TouchableOpacity onPress={() => router.push("/notifications")}>
             <View className="mt-1.5">
               <Ionicons name="notifications" size={24} color="#0f766e" />
             </View>
@@ -245,12 +245,12 @@ const Product = () => {
             <ActionButton
               title="🛒 Add Product"
               colors={["#DEF9C4", "#9CDBA6"]}
-              onPress={() => router.replace("/product/add-product")}
+              onPress={() => router.push("/product/add-product")}
             />
             <ActionButton
               title="📦 Bulk Update"
               colors={["#50B498", "#468585"]}
-              onPress={() => router.replace("/product/bulk-update")}
+              onPress={() => router.push("/product/bulk-update")}
             />
           </View>
         )}

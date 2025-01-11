@@ -119,38 +119,37 @@
  *                   example: "00090"
  */
 
-
-
 import { Order } from "../../models/index.js"; // Import the Order model
-import { errorHelper, getText } from "../../utils/index.js"; // Import utilities
+import { errorHelper } from "../../utils/index.js"; // Import utilities
 
 export default async (req, res) => {
   const { orderId } = req.params; // Get the order ID from the request params
 
-
   // Validate the required parameter
   if (!orderId) {
     return res.status(400).json({
-      resultMessage: getText("00025"),
+      resultMessage: "Order ID is required.", // Error message for missing orderId
       resultCode: "00025",
     });
   }
 
   try {
     // Find the order by ID, populate related fields like products and customer if needed
-    const order = await Order.findById(orderId).populate('customerId').populate('products.productId');
+    const order = await Order.findById(orderId)
+      .populate("customerId")
+      .populate("products.productId");
 
     // Check if the order exists
     if (!order) {
       return res.status(404).json({
-        resultMessage: getText("00028"),
+        resultMessage: "Order not found.", // Error message when order is not found
         resultCode: "00028",
       });
     }
 
     // Return the order details in the response
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success message
+      resultMessage: "Order fetched successfully.", // Success message
       resultCode: "00089",
       order, // Return the fetched order
     });

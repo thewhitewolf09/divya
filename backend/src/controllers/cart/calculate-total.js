@@ -73,11 +73,8 @@
  *                   description: Error code.
  */
 
-
-
-
 import { Cart, Product } from "../../models/index.js"; // Ensure Product is imported to access discount info
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId } = req.params; // Assuming customerId is passed as a URL parameter
@@ -85,17 +82,17 @@ export default async (req, res) => {
   // Validate required field
   if (!customerId) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Message for missing customerId
+      resultMessage: "Missing customer ID in the request.",
       resultCode: "00025",
     });
   }
 
   try {
     // Find the cart for the specified customer
-    const cart = await Cart.findOne({ customerId }).populate('items.productId'); // Populate productId to access product details
+    const cart = await Cart.findOne({ customerId }).populate("items.productId"); // Populate productId to access product details
     if (!cart) {
       return res.status(404).json({
-        resultMessage: getText("00028"), // Message indicating the cart does not exist
+        resultMessage: "Cart not found for the given customer.",
         resultCode: "00028",
       });
     }
@@ -107,14 +104,14 @@ export default async (req, res) => {
     }, 0);
 
     // Check for discounts
-    const discount = cart.items.reduce(async (accumulator, item) => {
+    const discount = await cart.items.reduce(async (accumulator, item) => {
       const product = await Product.findById(item.productId); // Get product details to check for discount
       const itemDiscount = product.discount || 0; // Get discount, default to 0 if not available
-      return accumulator + (item.price * item.quantity * (itemDiscount / 100)); // Calculate total discount for this item
+      return accumulator + item.price * item.quantity * (itemDiscount / 100); // Calculate total discount for this item
     }, 0);
 
     // Await discount calculation before proceeding
-    totalAmount -= await discount;
+    totalAmount -= discount;
 
     // Update the total amount in the cart
     cart.totalAmount = Math.max(totalAmount, 0); // Ensure totalAmount is not negative
@@ -123,12 +120,16 @@ export default async (req, res) => {
     await cart.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Message for successful calculation
+      resultMessage: "Cart total calculated successfully.",
       resultCode: "00089",
       totalAmount: cart.totalAmount, // Return the calculated total amount
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Handle unexpected errors
+    return res.status(500).json({
+      resultMessage: "An error occurred while calculating the cart total.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Handle unexpected errors
   }
 };

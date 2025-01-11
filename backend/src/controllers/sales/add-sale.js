@@ -133,9 +133,8 @@
  */
 
 
-
 import { Product, Sale, Customer } from "../../models/index.js"; // Make sure to import Customer model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const salesData = req.body; // Expecting an array of sale objects
@@ -143,7 +142,7 @@ export default async (req, res) => {
   // Validate that the request body is an array
   if (!Array.isArray(salesData) || salesData.length === 0) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Missing required fields
+      resultMessage: "Missing required fields. Please provide an array of sales data.",
       resultCode: "00025",
     });
   }
@@ -165,7 +164,7 @@ export default async (req, res) => {
       // Validate required fields for each sale
       if (!productId || !quantity || !price) {
         return res.status(400).json({
-          resultMessage: getText("00025"), // Missing required fields
+          resultMessage: "Missing required fields. Each sale must include productId, quantity, and price.",
           resultCode: "00025",
         });
       }
@@ -174,7 +173,7 @@ export default async (req, res) => {
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({
-          resultMessage: getText("00093"), // Product not found
+          resultMessage: "Product not found. Please provide a valid productId.",
           resultCode: "00093",
         });
       }
@@ -220,12 +219,16 @@ export default async (req, res) => {
     }
 
     return res.status(201).json({
-      resultMessage: getText("00089"), // Sale added successfully
+      resultMessage: "Sales added successfully.",
       resultCode: "00089",
       sales: createdSales, // Return all created sales
     });
   } catch (err) {
     console.error("Error adding new sales:", err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "An error occurred while processing the sales.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Error handling
   }
 };

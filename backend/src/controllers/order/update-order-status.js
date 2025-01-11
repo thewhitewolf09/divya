@@ -164,7 +164,7 @@
  */
 
 import { Notification, Order } from "../../models/index.js"; // Import Order model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
@@ -180,7 +180,7 @@ export default async (req, res) => {
     // If the order doesn't exist, return a 404 error
     if (!order) {
       return res.status(404).json({
-        resultMessage: getText("00030"), // "Order not found"
+        resultMessage: "Order not found.",
         resultCode: "00030",
       });
     }
@@ -256,7 +256,7 @@ export default async (req, res) => {
 
     // Return the updated order details
     return res.status(200).json({
-      resultMessage: getText("00091"), // "Order updated successfully"
+      resultMessage: "Order updated successfully.",
       resultCode: "00091",
       order: updatedOrder, // Send the updated order back
     });

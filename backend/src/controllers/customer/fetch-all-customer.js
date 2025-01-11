@@ -100,7 +100,7 @@
  */
 
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const {
@@ -112,7 +112,7 @@ export default async (req, res) => {
     maxPurchases,
     minBalance,
     maxBalance,
-    sort
+    sort,
   } = req.query;
 
   try {
@@ -175,7 +175,6 @@ export default async (req, res) => {
       }
     }
 
-
     // Fetch paginated customers based on the query
     const customers = await Customer.find(query)
       .sort(sortOption)
@@ -188,13 +187,17 @@ export default async (req, res) => {
     const totalCustomers = await Customer.countDocuments(query); // Count total matching customers
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Successfully retrieved customers
+      resultMessage: "Successfully retrieved customers", // Success message
       resultCode: "00089",
       totalCustomers,
       customers,
     });
   } catch (err) {
     console.error("Error fetching customers:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "Internal server error while fetching customers", // Error message
+      resultCode: "00008",
+      error: err.message,
+    }); // Error handling
   }
 };

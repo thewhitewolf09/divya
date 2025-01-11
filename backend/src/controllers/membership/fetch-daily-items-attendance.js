@@ -55,29 +55,31 @@
 
 
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
 
+  // Check if the customer ID is provided
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Missing customer ID
+      resultMessage: "Missing customer ID", // Missing customer ID error
       resultCode: "00022",
     });
   }
 
   try {
-    // Fetch customer details
+    // Fetch customer details with populated fields
     const customer = await Customer.findById(id)
       .populate("addedBy")
       .populate("shops")
       .populate("dailyItems.itemName")
       .exec();
 
+    // If customer is not found, return an error
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // Customer not found
+        resultMessage: "Customer not found", // Customer not found error
         resultCode: "00052",
       });
     }
@@ -85,7 +87,7 @@ export default async (req, res) => {
     // Check if the customer has daily items
     if (!customer.dailyItems || Object.keys(customer.dailyItems).length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00093"), // No daily items found for the customer
+        resultMessage: "No daily items found for the customer", // No daily items error
         resultCode: "00093",
       });
     }
@@ -99,13 +101,14 @@ export default async (req, res) => {
       })
     );
 
+    // Return success response with daily item attendance
     return res.status(200).json({
-      resultMessage: getText("00089"), // Successfully retrieved daily item attendance
+      resultMessage: "Successfully retrieved daily item attendance", // Success message
       resultCode: "00089",
       dailyItemAttendance,
     });
   } catch (err) {
     console.error("Error fetching daily item attendance:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json(errorHelper("00008", req, err.message)); // Internal server error handling
   }
 };

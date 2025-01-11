@@ -50,10 +50,8 @@
  *         description: Internal server error.
  */
 
-
-
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
@@ -61,7 +59,7 @@ export default async (req, res) => {
 
   if (!id || !membershipStatus) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Missing required fields
+      resultMessage: "Missing required fields", // Missing required fields error
       resultCode: "00022",
     });
   }
@@ -70,7 +68,7 @@ export default async (req, res) => {
   const validStatuses = ["active", "inactive"];
   if (!validStatuses.includes(membershipStatus)) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Invalid membership status
+      resultMessage: "Invalid membership status", // Invalid membership status error
       resultCode: "00022",
     });
   }
@@ -85,7 +83,7 @@ export default async (req, res) => {
 
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // Customer not found
+        resultMessage: "Customer not found", // Customer not found error
         resultCode: "00052",
       });
     }
@@ -95,12 +93,12 @@ export default async (req, res) => {
     const updatedCustomer = await customer.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Successfully updated membership status
+      resultMessage: "Successfully updated membership status", // Success message
       resultCode: "00089",
       customer: updatedCustomer,
     });
   } catch (err) {
     console.error("Error updating membership status:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json(errorHelper("00008", req, err.message)); // Internal server error handling
   }
 };

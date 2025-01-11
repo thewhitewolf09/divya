@@ -37,17 +37,16 @@ const CustomerCreditScreen = () => {
     customers.filter((customer) => customer?.creditBalance > 0)
   );
 
-   // References to control the bottom sheet
-   const [activeSheet, setActiveSheet] = useState(null);
-   const sortSheetRef = useRef(null);
-   const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
- 
-   // Function to toggle the sort bottom sheet
-   const handleOpenSort = () => {
-     setActiveSheet("sort");
-     sortSheetRef.current?.expand();
-   };
+  // References to control the bottom sheet
+  const [activeSheet, setActiveSheet] = useState(null);
+  const sortSheetRef = useRef(null);
+  const snapPoints = useMemo(() => ["25%", "50%", "75%"], []);
 
+  // Function to toggle the sort bottom sheet
+  const handleOpenSort = () => {
+    setActiveSheet("sort");
+    sortSheetRef.current?.expand();
+  };
 
   const openModal = (customer) => {
     setSelectedCustomer(customer);
@@ -71,7 +70,7 @@ const CustomerCreditScreen = () => {
       sound: "default",
       title: `Reminder for ${selectedCustomer.name}`,
       body: `Hello ${selectedCustomer.name}, just a reminder!`,
-      data: { customData: "any data", targetScreen: "/notifications" }, 
+      data: { customData: "any data", targetScreen: "/notifications" },
     };
 
     try {
@@ -85,9 +84,7 @@ const CustomerCreditScreen = () => {
         body: JSON.stringify(message),
       });
 
-
       if (response.ok) {
-        
         alert(`Reminder sent to ${selectedCustomer.name}`);
       } else {
         alert(`Failed to send reminder to ${selectedCustomer.name}`);
@@ -206,19 +203,10 @@ const CustomerCreditScreen = () => {
 
   return (
     <SafeAreaView className="bg-white h-full">
-      <View
-        className="p-4"
-   
-      >
+      <View className="p-4">
         <View className="flex-row items-center mb-6">
           <TouchableOpacity
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.push("/home");
-              }
-            }}
+            onPress={() => router.back()}
             style={{ marginRight: 5 }}
           >
             <Ionicons name="chevron-back" size={28} color="teal" />
@@ -424,8 +412,8 @@ const CustomerCreditScreen = () => {
         )}
       </View>
 
-       {/* Sort Bottom Sheet */}
-       <SortComponentCustomer
+      {/* Sort Bottom Sheet */}
+      <SortComponentCustomer
         sortSheetRef={sortSheetRef}
         snapPoints={snapPoints}
         activeSheet={activeSheet}

@@ -94,27 +94,24 @@
  *         description: Internal server error.
  */
 
-
-
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   const userId = req.user._id;
 
-
-
+  // Validate if the customer ID is provided
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Missing customer ID
+      resultMessage: "Missing customer ID.",
       resultCode: "00022",
     });
   }
 
   try {
-    // Find the customer by ID
+    // Find the customer by ID and populate necessary fields
     const customer = await Customer.findById(id)
       .populate("addedBy")
       .populate({
@@ -122,40 +119,44 @@ export default async (req, res) => {
       })
       .populate("shops");
 
+    // Check if customer exists
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // Customer not found
+        resultMessage: "Customer not found.",
         resultCode: "00052",
       });
     }
 
+    // Update customer fields based on the request body
+    Object.keys(updates).forEach((key) => {
+      if (updates[key] !== undefined) {
+        if (
+          ["street", "city", "state", "postalCode", "country"].includes(key)
+        ) {
+          // Ensure address object exists
+          customer.address = customer.address || {};
+          customer.address[key] = updates[key];
+        } else {
+          customer[key] = updates[key];
+        }
+      }
+    });
 
-Object.keys(updates).forEach((key) => {
-  if (updates[key] !== undefined) {
-    if (['street', 'city', 'state', 'postalCode', 'country'].includes(key)) {
-      // Ensure address object exists
-      customer.address = customer.address || {};
-      customer.address[key] = updates[key];
-    } else {
-      customer[key] = updates[key];
-    }
-  }
-});
-
-
-
-    // Save the updated customer
+    // Save the updated customer data to the database
     const updatedCustomer = await customer.save();
 
-
-
+    // Respond with success message
     return res.status(200).json({
-      resultMessage: getText("00089"), // Customer updated successfully
+      resultMessage: "Customer updated successfully.",
       resultCode: "00089",
       customer: updatedCustomer,
     });
   } catch (err) {
     console.error("Error updating customer details:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "Internal server error while updating customer details.",
+      resultCode: "00008",
+      error: err.message,
+    });
   }
 };

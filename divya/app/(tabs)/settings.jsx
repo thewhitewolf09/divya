@@ -12,7 +12,6 @@ import {
   TextInput,
   Linking,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 import { useFocusEffect } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
@@ -38,7 +37,7 @@ const SettingsScreen = () => {
   const { user, role, shops } = useSelector((state) => state.user);
   const { customer } = useSelector((state) => state.customer);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedShop, setSelectedShop] = useState(null);
+  // const [selectedShop, setSelectedShop] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const [shopTimings, setShopTimings] = useState({
@@ -57,42 +56,42 @@ const SettingsScreen = () => {
     settingsOptions.unshift({ id: "1", name: "Shop Timings", icon: "time" });
   }
 
-  const [isMapExpanded, setIsMapExpanded] = useState(false);
+  // const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentOption, setCurrentOption] = useState(null);
 
-  const toggleMapSize = () => {
-    setIsMapExpanded(!isMapExpanded);
-  };
+  // const toggleMapSize = () => {
+  //   setIsMapExpanded(!isMapExpanded);
+  // };
 
   const fetchSettings = async () => {
     setIsLoading(true);
     if (role === "customer") {
       await dispatch(fetchShopList());
-      await dispatch(fetchCustomerDetails(user._id));
+      await dispatch(fetchCustomerDetails(user?._id));
     } else {
       await dispatch(fetchShopList());
-      await dispatch(fetchUser(user._id));
+      await dispatch(fetchUser(user?._id));
     }
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    if (role === "customer" && shops.length === 1) {
-      setSelectedShop(shops[0]);
-    } else {
-      const shop = shops.find((shop) => shop._id === user._id);
-      if (
-        shop &&
-        shop.shopLocation.googleMapLocation?.latitude &&
-        shop.shopLocation.googleMapLocation?.longitude
-      ) {
-        setSelectedShop(shop);
-      } else {
-        setSelectedShop(null);
-      }
-    }
-  }, [role, shops]);
+  // useEffect(() => {
+  //   if (role === "customer" && shops.length === 1) {
+  //     setSelectedShop(shops[0]);
+  //   } else {
+  //     const shop = shops.find((shop) => shop._id === user?._id);
+  //     if (
+  //       shop &&
+  //       shop.shopLocation.googleMapLocation?.latitude &&
+  //       shop.shopLocation.googleMapLocation?.longitude
+  //     ) {
+  //       setSelectedShop(shop);
+  //     } else {
+  //       setSelectedShop(null);
+  //     }
+  //   }
+  // }, [role, shops]);
 
   useFocusEffect(
     useCallback(() => {
@@ -109,7 +108,7 @@ const SettingsScreen = () => {
   const handleSaveTimings = (newOpeningTime, newClosingTime) => {
     dispatch(
       updateShopTimings({
-        userId: user._id,
+        userId: user?._id,
         shopTimings: {
           openingTime: newOpeningTime,
           closingTime: newClosingTime,
@@ -137,7 +136,7 @@ const SettingsScreen = () => {
     Alert.alert("Logout", "You have been logged out.");
 
     dispatch(logout());
-    router.replace("/sign-in");
+    router.push("/sign-in");
   };
 
   const renderItem = ({ item }) => (
@@ -157,11 +156,11 @@ const SettingsScreen = () => {
 
   const handleEditProfile = () => {
     if (role === "shopOwner") {
-      router.replace("/user/edit-user");
+      router.push("/user/edit-user");
     } else {
       router.push({
         pathname: "/customer/customer-edit",
-        params: { customerId: user._id },
+        params: { customerId: user?._id },
       });
     }
   };
@@ -206,9 +205,9 @@ const SettingsScreen = () => {
                 <Ionicons name="person-circle" size={60} color="#0f766e" />
                 <View className="ml-4 flex-1">
                   <Text className="text-xl font-semibold text-gray-800">
-                    {user.name}
+                    {user?.name}
                   </Text>
-                  <Text className="text-gray-600">{user.mobile}</Text>
+                  <Text className="text-gray-600">{user?.mobile}</Text>
 
                   {/* Display shop timings and address for shopOwner */}
                   {role === "shopOwner" && (
@@ -237,6 +236,8 @@ const SettingsScreen = () => {
             </LinearGradient>
           </View>
 
+
+          {/* 
           {role === "customer" && shops.length > 1 && (
             <View className="mb-4">
               <Text className="text-lg font-semibold text-teal-700 mb-2">
@@ -261,10 +262,10 @@ const SettingsScreen = () => {
                 </Picker>
               </View>
             </View>
-          )}
+          )} */}
 
           {/* Google Map for shopOwner */}
-          {shops && selectedShop && (
+          {/* {shops && selectedShop && (
             <View className={`mb-4 rounded-lg shadow-lg`}>
               <View
                 style={{
@@ -307,7 +308,7 @@ const SettingsScreen = () => {
                 </MapView>
 
                 {/* Address Text */}
-                <View className="absolute bottom-0 left-0 right-0 p-2 bg-white rounded-lg">
+          {/* <View className="absolute bottom-0 left-0 right-0 p-2 bg-white rounded-lg">
                   <Text className="text-center text-sm font-semibold">
                     {selectedShop.shopLocation?.address?.street},{" "}
                     {selectedShop.shopLocation?.address?.city},{" "}
@@ -316,7 +317,7 @@ const SettingsScreen = () => {
                 </View>
 
                 {/* Toggle Button */}
-                <TouchableOpacity
+          {/* <TouchableOpacity
                   onPress={toggleMapSize}
                   className="absolute right-2 top-2 bg-white p-2 rounded-full shadow-md"
                 >
@@ -328,7 +329,9 @@ const SettingsScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-          )}
+          )} */}
+
+
 
           {/* Payment History Button for Customers */}
           {role === "customer" && (
@@ -338,7 +341,7 @@ const SettingsScreen = () => {
                 router.push({
                   pathname: "/sale/payment-history",
                   params: {
-                    customerId: user._id,
+                    customerId: user?._id,
                   },
                 })
               }

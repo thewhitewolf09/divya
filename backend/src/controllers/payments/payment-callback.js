@@ -124,11 +124,8 @@
  *                   type: string
  */
 
-
-
-
 import { Payment, Order } from "../../models/index.js"; // Import Payment and Order models
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { transactionId, status } = req.body; // Data from payment gateway callback (e.g., transaction ID, payment status)
@@ -136,19 +133,19 @@ export default async (req, res) => {
   try {
     // Find the payment by transaction ID
     const payment = await Payment.findOne({ transactionId });
-    
+
     if (!payment) {
       return res.status(404).json({
-        resultMessage: getText("00098"), // "Payment record not found"
-        resultCode: "00098",
+        resultMessage: "Payment record not found.",
+        resultCode: "40401", // Custom error code for payment not found
       });
     }
 
     // Check if the status is valid (Success or Failed)
-    if (!['Success', 'Failed'].includes(status)) {
+    if (!["Success", "Failed"].includes(status)) {
       return res.status(400).json({
-        resultMessage: getText("00099"), // "Invalid payment status"
-        resultCode: "00099",
+        resultMessage: "Invalid payment status.",
+        resultCode: "40001", // Custom error code for invalid payment status
       });
     }
 
@@ -160,8 +157,8 @@ export default async (req, res) => {
     const order = await Order.findById(payment.orderId);
     if (!order) {
       return res.status(404).json({
-        resultMessage: getText("00100"), // "Order not found"
-        resultCode: "00100",
+        resultMessage: "Order not found.",
+        resultCode: "40402", // Custom error code for order not found
       });
     }
 
@@ -175,13 +172,13 @@ export default async (req, res) => {
 
     // Respond with success
     return res.status(200).json({
-      resultMessage: getText("00101"), // "Payment status updated successfully"
-      resultCode: "00101",
+      resultMessage: "Payment status updated successfully.",
+      resultCode: "20001", // Custom success code for successfully updating payment status
       payment,
       order,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Internal server error response
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Custom error code for server errors
   }
 };

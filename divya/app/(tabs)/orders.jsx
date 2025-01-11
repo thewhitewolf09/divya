@@ -114,7 +114,7 @@ const OrderManagementScreen = () => {
           <View>
             <Text className="text-2xl font-semibold text-teal-700">Orders</Text>
           </View>
-          <TouchableOpacity onPress={() => router.replace("/notifications")}>
+          <TouchableOpacity onPress={() => router.push("/notifications")}>
             <View className="mt-1.5">
               <Ionicons name="notifications" size={24} color="#0f766e" />
             </View>

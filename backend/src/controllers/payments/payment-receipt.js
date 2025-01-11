@@ -50,9 +50,8 @@
 
 
 
-
 import { Payment } from "../../models/index.js"; // Import Payment model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 import pdf from "pdfkit"; // PDF generation package (or any other PDF generator)
 
 export default async (req, res) => {
@@ -65,8 +64,8 @@ export default async (req, res) => {
 
     if (!payment) {
       return res.status(404).json({
-        resultMessage: getText("00104"), // "Payment receipt not found"
-        resultCode: "00104",
+        resultMessage: "Payment receipt not found.",
+        resultCode: "40401", // Custom error code for payment not found
       });
     }
 
@@ -100,6 +99,6 @@ export default async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Internal server error response
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Custom error code for server errors
   }
 };

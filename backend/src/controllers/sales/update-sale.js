@@ -123,13 +123,10 @@
  *                   description: Error code
  */
 
+import { Sale } from "../../models/index.js";
+import { errorHelper } from "../../utils/index.js";
 
-
-
-import { Sale } from '../../models/index.js';
-import { errorHelper, getText } from '../../utils/index.js';
-
-export default  async (req, res) => {
+export default async (req, res) => {
   const { id } = req.params;
   const { quantity, price, isCredit, creditDetails } = req.body;
 
@@ -138,8 +135,8 @@ export default  async (req, res) => {
     const sale = await Sale.findById(id);
     if (!sale) {
       return res.status(404).json({
-        resultMessage: getText('00093'), // Sale not found
-        resultCode: '00093',
+        resultMessage: "Sale not found.",
+        resultCode: "40401", // Custom code for sale not found
       });
     }
 
@@ -155,8 +152,10 @@ export default  async (req, res) => {
     if (isCredit !== undefined) {
       sale.isCredit = isCredit;
       if (isCredit && creditDetails) {
-        sale.creditDetails.amountOwed = creditDetails.amountOwed || sale.creditDetails.amountOwed;
-        sale.creditDetails.paymentStatus = creditDetails.paymentStatus || sale.creditDetails.paymentStatus;
+        sale.creditDetails.amountOwed =
+          creditDetails.amountOwed || sale.creditDetails.amountOwed;
+        sale.creditDetails.paymentStatus =
+          creditDetails.paymentStatus || sale.creditDetails.paymentStatus;
       } else {
         sale.creditDetails = {}; // Reset credit details if the sale is no longer on credit
       }
@@ -166,14 +165,16 @@ export default  async (req, res) => {
     const updatedSale = await sale.save();
 
     return res.status(200).json({
-      resultMessage: getText('00094'), // Sale updated successfully
-      resultCode: '00094',
+      resultMessage: "Sale updated successfully.",
+      resultCode: "20001", // Custom code for successful update
       sale: updatedSale,
     });
   } catch (err) {
-    console.error('Error updating sale:', err);
-    return res.status(500).json(errorHelper('00090', req, err.message)); // Error handling
+    console.error("Error updating sale:", err);
+    return res.status(500).json({
+      resultMessage: "An error occurred while updating the sale.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };
-
-

@@ -105,7 +105,7 @@
  */
 
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 // Get All Products API
 export default async (req, res) => {
@@ -154,12 +154,12 @@ export default async (req, res) => {
     query.discount = discounted === "true" ? { $gt: 0 } : { $lte: 0 }; // Filter by non-zero discount
   }
 
-  // Stock Status Filter: Add any condition for stockStatus (if used)
+  // Stock Status Filter
   if (stockStatus !== undefined) {
     query.stockStatus = stockStatus; // Ensure the correct field name is used in the schema
   }
 
-  // Active Filter: Check if active is true
+  // Active Filter
   if (active !== undefined) {
     query.isActive = active === "true"; // Check the `isActive` field in the model
   }
@@ -175,20 +175,25 @@ export default async (req, res) => {
 
   try {
     // Fetch the products based on the constructed query
-    const products = await Product.find(query).sort(sortQuery);;
+    const products = await Product.find(query).sort(sortQuery);
 
     // Count the total number of products matching the query
     const totalProducts = await Product.countDocuments(query);
 
     // Send the response with products and pagination info
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Products retrieved successfully.",
+      resultCode: "20001", // Custom code for success
       totalProducts,
       products,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error fetching products:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while fetching products.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };

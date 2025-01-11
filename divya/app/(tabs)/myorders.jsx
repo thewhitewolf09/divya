@@ -128,7 +128,7 @@ const MyOrdersScreen = () => {
                 My Orders
               </Text>
             </View>
-            <TouchableOpacity onPress={() => router.replace("/notifications")}>
+            <TouchableOpacity onPress={() => router.push("/notifications")}>
               <View className="mt-1.5">
                 <Ionicons name="notifications" size={24} color="#0f766e" />
               </View>
@@ -141,13 +141,13 @@ const MyOrdersScreen = () => {
               title="View Cart"
               icon="cart"
               colors={["#0f766e", "#0f766e"]}
-              onPress={() => router.replace("/order/view-cart")}
+              onPress={() => router.push("/order/view-cart")}
             />
             <ActionButton
               title="Order History"
               icon="time"
               colors={["#0f766e", "#0f766e"]}
-              onPress={() => router.replace("/order/order-history")}
+              onPress={() => router.push("/order/order-history")}
             />
           </View>
 

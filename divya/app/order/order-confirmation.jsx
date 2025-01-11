@@ -62,10 +62,8 @@ const OrderConfirmationScreen = () => {
               onPress={() => {
                 if (payment.status === "Success") {
                   router.push("/home");
-                } else if (router.canGoBack()) {
+                } else{
                   router.back();
-                } else {
-                  router.push("/home");
                 }
               }}
               style={{ marginRight: 5 }}

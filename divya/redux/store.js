@@ -17,7 +17,6 @@ import notificationReducer from "./slices/notificationSlice"
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["user"],
 };
 
 // Combine reducers

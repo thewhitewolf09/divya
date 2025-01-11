@@ -82,58 +82,61 @@
  *                   example: "00090"
  */
 
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
-
+import { errorHelper } from "../../utils/index.js";
 
 // Filter Products API
 export default async (req, res) => {
-    const {
-      category,
-      priceMin,
-      priceMax,
-      stockStatus,
-      discounted,
-      active
-    } = req.query;
-  
-    const query = {};
-  
-    if (category) {
-      query.category = category;
-    }
-  
-    if (priceMin !== undefined && priceMax !== undefined) {
-      query.price = { $gte: Number(priceMin), $lte: Number(priceMax) };
-    } else if (priceMin !== undefined) {
-      query.price = { $gte: Number(priceMin) };
-    } else if (priceMax !== undefined) {
-      query.price = { $lte: Number(priceMax) };
-    }
-  
-    if (stockStatus !== undefined) {
-      query.stockStatus = stockStatus;
-    }
-  
-    if (discounted !== undefined) {
-      query.discounted = discounted === "true";
-    }
-  
-    if (active !== undefined) {
-      query.active = active === "true";
-    }
-  
-    try {
-      const products = await Product.find(query);
-  
-      return res.status(200).json({
-        resultMessage: getText("00089"),
-        resultCode: "00089",
-        products,
-      });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json(errorHelper("00090", req, err.message));
-    }
-  };
+  const { category, priceMin, priceMax, stockStatus, discounted, active } =
+    req.query;
+
+  const query = {};
+
+  // Filter by category
+  if (category) {
+    query.category = category;
+  }
+
+  // Filter by price range
+  if (priceMin !== undefined && priceMax !== undefined) {
+    query.price = { $gte: Number(priceMin), $lte: Number(priceMax) };
+  } else if (priceMin !== undefined) {
+    query.price = { $gte: Number(priceMin) };
+  } else if (priceMax !== undefined) {
+    query.price = { $lte: Number(priceMax) };
+  }
+
+  // Filter by stock status
+  if (stockStatus !== undefined) {
+    query.stockStatus = stockStatus;
+  }
+
+  // Filter by discounted products
+  if (discounted !== undefined) {
+    query.discounted = discounted === "true";
+  }
+
+  // Filter by active status
+  if (active !== undefined) {
+    query.active = active === "true";
+  }
+
+  try {
+    // Fetch products based on the constructed query
+    const products = await Product.find(query);
+
+    return res.status(200).json({
+      resultMessage: "Products filtered successfully.",
+      resultCode: "20001", // Custom code for success
+      products,
+    });
+  } catch (err) {
+    console.error("Error fetching filtered products:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while fetching products.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
+  }
+};

@@ -81,18 +81,15 @@
  *                   example: "00090"
  */
 
-
-
 import { Product } from "../../models/index.js";
-import { getText } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
 
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "Invalid product ID."
-      resultCode: "00022",
+      resultMessage: "Invalid product ID.",
+      resultCode: "40001", // Custom error code
     });
   }
 
@@ -100,8 +97,8 @@ export default async (req, res) => {
   const product = await Product.findById(id);
   if (!product) {
     return res.status(404).json({
-      resultMessage: getText("00052"), // "Product not found."
-      resultCode: "00052",
+      resultMessage: "Product not found.",
+      resultCode: "40401", // Custom error code
     });
   }
 
@@ -111,14 +108,14 @@ export default async (req, res) => {
     await product.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // "Image uploaded successfully."
-      resultCode: "00089",
+      resultMessage: "Image uploaded successfully.",
+      resultCode: "20001", // Custom success code
       product,
     });
   } catch (err) {
     return res.status(500).json({
-      resultMessage: getText("00090"), // "Failed to update product."
-      resultCode: "00090",
+      resultMessage: "Failed to update product.",
+      resultCode: "50001", // Custom error code
       error: err.message,
     });
   }

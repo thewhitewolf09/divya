@@ -83,20 +83,17 @@
  *                   example: "00008"
  */
 
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
 
-
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"),
-      resultCode: "00022",
+      resultMessage: "Product ID is required in the request parameters.",
+      resultCode: "40001", // Custom code for missing Product ID
     });
   }
 
@@ -105,28 +102,31 @@ export default async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00052"),
-        resultCode: "00052",
+        resultMessage: "Product not found. Please provide a valid Product ID.",
+        resultCode: "40401", // Custom code for product not found
       });
     }
 
     if (product.addedBy.toString() !== userId.toString()) {
       return res.status(403).json({
-        resultMessage: getText("00017"),
-        resultCode: "00017",
+        resultMessage: "You do not have permission to delete this product.",
+        resultCode: "40301", // Custom code for forbidden access
       });
     }
 
     await Product.findByIdAndDelete(id);
 
     return res.status(200).json({
-      resultMessage: getText("00092"),
-      resultCode: "00092",
+      resultMessage: "Product deleted successfully.",
+      resultCode: "20001", // Custom code for successful deletion
     });
   } catch (err) {
-    console.log(err);
-    return res.status(500).json(errorHelper("00008", req, err.message));
+    console.error("Error while deleting product:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while attempting to delete the product.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };
-
- 

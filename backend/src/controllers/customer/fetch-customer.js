@@ -85,11 +85,8 @@
  *         description: Internal server error.
  */
 
-
-
-
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
@@ -97,7 +94,7 @@ export default async (req, res) => {
   // Validate the ID
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00025"),
+      resultMessage: "Customer ID is required.", // Missing customer ID
       resultCode: "00025",
     });
   }
@@ -113,19 +110,23 @@ export default async (req, res) => {
 
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00026"),
+        resultMessage: "Customer not found.", // Customer not found
         resultCode: "00026",
       });
     }
 
     // Respond with customer details
     return res.status(200).json({
-      resultMessage: getText("00089"),
+      resultMessage: "Customer details retrieved successfully.", // Success message
       resultCode: "00089",
       customer,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    return res.status(500).json({
+      resultMessage: "Internal server error while fetching customer details.", // Error message
+      resultCode: "00090",
+      error: err.message,
+    });
   }
 };

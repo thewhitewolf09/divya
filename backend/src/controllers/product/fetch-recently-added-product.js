@@ -39,14 +39,10 @@
  *                   example: "00090"
  */
 
-
-
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
-const RECENT_DAYS_THRESHOLD = 30; 
+const RECENT_DAYS_THRESHOLD = 30;
 
 // Calculate the date for the threshold
 const calculateRecentDate = () => {
@@ -58,15 +54,22 @@ export default async (req, res) => {
   try {
     const recentDate = calculateRecentDate();
 
-    const recentProducts = await Product.find({ createdAt: { $gte: recentDate } });
+    const recentProducts = await Product.find({
+      createdAt: { $gte: recentDate },
+    });
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // "Recently added products fetched successfully."
-      resultCode: "00089",
+      resultMessage: "Recently added products fetched successfully.",
+      resultCode: "20001", // Custom success code
       products: recentProducts,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error fetching recent products:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An error occurred while fetching recently added products.",
+      resultCode: "50001", // Custom error code
+      error: err.message,
+    });
   }
 };

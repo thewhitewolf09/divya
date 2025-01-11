@@ -56,7 +56,7 @@
  */
 
 import { Sale, Customer, User, Notification } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
@@ -66,7 +66,8 @@ export default async (req, res) => {
   // Validate paymentStatus
   if (!["pending", "paid", "partially_paid"].includes(paymentStatus)) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Invalid payment status
+      resultMessage:
+        "Invalid payment status. Please provide one of the following: 'pending', 'paid', or 'partially_paid'.",
       resultCode: "00025",
     });
   }
@@ -76,7 +77,7 @@ export default async (req, res) => {
     const customer = await Customer.findById(customerId);
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00093"), // Customer not found
+        resultMessage: "Customer not found.",
         resultCode: "00093",
       });
     }
@@ -89,7 +90,7 @@ export default async (req, res) => {
 
     if (!creditSales.length) {
       return res.status(404).json({
-        resultMessage: getText("00092"), // No credit sales found for this customer
+        resultMessage: "No credit sales found for this customer.",
         resultCode: "00092",
       });
     }
@@ -106,7 +107,8 @@ export default async (req, res) => {
     } else if (paymentStatus === "partially_paid") {
       if (!amountPaid || amountPaid <= 0 || amountPaid > totalOwed) {
         return res.status(400).json({
-          resultMessage: getText("00026"), // Invalid amount
+          resultMessage:
+            "Invalid amount paid. Please ensure the amount is greater than 0 and less than or equal to the total balance owed.",
           resultCode: "00026",
         });
       }
@@ -214,12 +216,17 @@ export default async (req, res) => {
 
     // Return the updated customer along with the credit details of the sales
     return res.status(200).json({
-      resultMessage: getText("00089"), // Payment updated successfully
+      resultMessage: "Payment updated successfully.",
       resultCode: "00089",
       customer,
     });
   } catch (err) {
     console.error("Error updating credit sale payment:", err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage:
+        "Internal server error while updating the credit sale payment.",
+      resultCode: "00090",
+      error: err.message,
+    });
   }
 };

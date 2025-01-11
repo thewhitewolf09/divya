@@ -213,13 +213,7 @@ const ProductDetails = () => {
         {/* Back Button */}
         <View className="flex-row items-center mb-4">
           <TouchableOpacity
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.push("/home");
-              }
-            }}
+            onPress={() => router.back()}
             className="mr-2"
           >
             <Ionicons name="chevron-back" size={28} color="teal" />

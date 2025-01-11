@@ -55,52 +55,57 @@
  *         description: Internal server error.
  */
 
-
-
 import { Customer, Sale } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
-export default  async (req, res) => {
-    const { minBalance, maxBalance } = req.query;
-  
-    // Validate query parameters
-    if (minBalance && isNaN(minBalance)) {
-      return res.status(400).json({
-        resultMessage: getText("00022"), // Invalid minBalance
-        resultCode: "00022",
-      });
-    }
-    if (maxBalance && isNaN(maxBalance)) {
-      return res.status(400).json({
-        resultMessage: getText("00022"), // Invalid maxBalance
-        resultCode: "00022",
-      });
-    }
-  
-    try {
-      // Build the query object
-      let query = {};
-  
-      if (minBalance || maxBalance) {
-        query.creditBalance = {};
-        if (minBalance) {
-          query.creditBalance.$gte = Number(minBalance);
-        }
-        if (maxBalance) {
-          query.creditBalance.$lte = Number(maxBalance);
-        }
+export default async (req, res) => {
+  const { minBalance, maxBalance } = req.query;
+
+  // Validate query parameters
+  if (minBalance && isNaN(minBalance)) {
+    return res.status(400).json({
+      resultMessage:
+        "Invalid minBalance parameter. It should be a valid number.", // Invalid minBalance error message
+      resultCode: "00022",
+    });
+  }
+  if (maxBalance && isNaN(maxBalance)) {
+    return res.status(400).json({
+      resultMessage:
+        "Invalid maxBalance parameter. It should be a valid number.", // Invalid maxBalance error message
+      resultCode: "00022",
+    });
+  }
+
+  try {
+    // Build the query object
+    let query = {};
+
+    if (minBalance || maxBalance) {
+      query.creditBalance = {};
+      if (minBalance) {
+        query.creditBalance.$gte = Number(minBalance);
       }
-  
-      // Fetch customers based on the credit balance range
-      const customers = await Customer.find(query);
-  
-      return res.status(200).json({
-        resultMessage: getText("00089"), // Successfully retrieved customers
-        resultCode: "00089",
-        customers,
-      });
-    } catch (err) {
-      console.error("Error fetching customers by credit balance:", err);
-      return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+      if (maxBalance) {
+        query.creditBalance.$lte = Number(maxBalance);
+      }
     }
-  };
+
+    // Fetch customers based on the credit balance range
+    const customers = await Customer.find(query);
+
+    return res.status(200).json({
+      resultMessage:
+        "Successfully retrieved customers based on credit balance range.", // Success message
+      resultCode: "00089",
+      customers,
+    });
+  } catch (err) {
+    console.error("Error fetching customers by credit balance:", err);
+    return res.status(500).json({
+      resultMessage: "Internal server error while fetching customers.", // Error message
+      resultCode: "00008",
+      error: err.message,
+    }); // Error handling
+  }
+};

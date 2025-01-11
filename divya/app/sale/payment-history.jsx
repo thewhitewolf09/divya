@@ -222,13 +222,7 @@ const PaymentHistory = () => {
         <View className="flex flex-col my-3 px-4 space-y-6">
           <View className="flex-row items-center mb-6 mt-2">
             <TouchableOpacity
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.push("/home");
-                }
-              }}
+              onPress={() => router.back()}
               style={{ marginRight: 5 }}
             >
               <Ionicons name="chevron-back" size={28} color="teal" />

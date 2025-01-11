@@ -99,9 +99,8 @@
  *                   type: string
  *                   example: "00090"
  */
-
 import { Product, Customer, Notification } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
@@ -113,8 +112,9 @@ export default async (req, res) => {
   if (!name || !category || !price || stockQuantity === undefined) {
     console.log(req.body);
     return res.status(400).json({
-      resultMessage: getText("00025"),
-      resultCode: "00025",
+      resultMessage:
+        "Product creation failed. Name, category, price, and stock quantity are required fields.",
+      resultCode: "40001", // Custom code for missing required fields
     });
   }
 
@@ -177,12 +177,17 @@ export default async (req, res) => {
     await Promise.all(notificationPromises);
 
     return res.status(201).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage:
+        "Product created successfully and notifications sent to active customers.",
+      resultCode: "20101", // Custom code for successful product creation
       product: savedProduct,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error creating product:", err);
+    return res.status(500).json({
+      resultMessage: "An error occurred while creating the product.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };

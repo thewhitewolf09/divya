@@ -125,9 +125,8 @@
  *                   example: "00090"
  */
 
-
 import { Order } from "../../models/index.js"; // Import Order model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId } = req.params; // Extract customerId from request parameters
@@ -135,26 +134,28 @@ export default async (req, res) => {
   // Validate customerId
   if (!customerId) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Error message for missing customerId
+      resultMessage: "Missing customerId.", // Error message for missing customerId
       resultCode: "00025",
     });
   }
 
   try {
     // Fetch orders by customerId, populate product details if necessary
-    const orders = await Order.find({ customerId }).populate('customerId').populate('products.productId');
+    const orders = await Order.find({ customerId })
+      .populate("customerId")
+      .populate("products.productId");
 
     // If no orders found, return a not found response
     if (!orders || orders.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00029"), // No orders found message
+        resultMessage: "No orders found.", // No orders found message
         resultCode: "00029",
       });
     }
 
     // Return the list of orders
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success message for fetched orders
+      resultMessage: "Orders fetched successfully.", // Success message for fetched orders
       resultCode: "00089",
       orders, // Send the list of orders
     });

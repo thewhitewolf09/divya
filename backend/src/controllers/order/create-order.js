@@ -116,11 +116,8 @@
  *                   example: "00090"
  */
 
-
-
 import { Order, Cart, Product, Customer } from "../../models/index.js"; // Import models
-import { errorHelper, getText } from "../../utils/index.js";
-
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId, paymentMethod, deliveryAddress, totalAmount } = req.body;
@@ -128,8 +125,8 @@ export default async (req, res) => {
   // Validate required fields
   if (!customerId || !paymentMethod || !deliveryAddress) {
     return res.status(400).json({
-      resultMessage: getText("00025"),
-      resultCode: "00025",
+      resultMessage: "Missing required fields.",
+      resultCode: "40001",
     });
   }
 
@@ -139,8 +136,8 @@ export default async (req, res) => {
 
     if (!cart || cart.items.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00028"),
-        resultCode: "00028",
+        resultMessage: "Cart is empty or not found.",
+        resultCode: "40401",
       });
     }
 
@@ -163,7 +160,7 @@ export default async (req, res) => {
       },
       payment: {
         method: paymentMethod,
-        status: "Failed",
+        status: "Pending", // Set status to "Pending" initially
         transactionId: `TXN${Date.now()}`,
       },
     });
@@ -171,15 +168,14 @@ export default async (req, res) => {
     // Save the order to the database
     const savedOrder = await newOrder.save();
 
-  
     // Return success response
     return res.status(201).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Order created successfully.",
+      resultCode: "20101",
       order: savedOrder,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Internal server error response
   }
 };

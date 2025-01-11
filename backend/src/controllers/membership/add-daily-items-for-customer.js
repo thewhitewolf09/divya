@@ -53,18 +53,17 @@
  *         description: Internal server error.
  */
 
-
-
 import { Customer, Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
   const { itemName, quantityPerDay } = req.body;
 
+  // Validate required fields
   if (!id || !itemName || quantityPerDay === undefined) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Missing required fields
+      resultMessage: "Missing required fields.",
       resultCode: "00022",
     });
   }
@@ -79,7 +78,7 @@ export default async (req, res) => {
 
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // Customer not found
+        resultMessage: "Customer not found.",
         resultCode: "00052",
       });
     }
@@ -93,7 +92,7 @@ export default async (req, res) => {
     const product = await Product.findOne({ name: itemName });
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00093"), // Product not found
+        resultMessage: "Product not found.",
         resultCode: "00093",
       });
     }
@@ -112,7 +111,7 @@ export default async (req, res) => {
 
     if (existingItem) {
       return res.status(400).json({
-        resultMessage: getText("00022"), // Item already exists
+        resultMessage: "Item already exists.",
         resultCode: "00022",
       });
     }
@@ -123,12 +122,12 @@ export default async (req, res) => {
     const updatedCustomer = await customer.save();
 
     return res.status(201).json({
-      resultMessage: getText("00089"), // Successfully added daily item
+      resultMessage: "Successfully added daily item.",
       resultCode: "00089",
       customer: updatedCustomer,
     });
   } catch (err) {
     console.log("Error adding daily item for customer:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json(errorHelper("00008", req, err.message)); // Internal server error
   }
 };

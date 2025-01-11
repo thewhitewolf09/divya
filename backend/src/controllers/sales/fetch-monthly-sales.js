@@ -75,9 +75,8 @@
  *                   description: Error code
  */
 
-
-import { Sale } from '../../models/index.js';
-import { errorHelper, getText } from '../../utils/index.js';
+import { Sale } from "../../models/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   try {
@@ -96,15 +95,26 @@ export default async (req, res) => {
         $gte: startDate,
         $lte: endDate,
       },
-    }).populate('productId customerId'); // Populate to include product and customer details
+    }).populate("productId customerId"); // Populate to include product and customer details
+
+    if (salesData.length === 0) {
+      return res.status(404).json({
+        resultMessage: "No sales found for the current month.",
+        resultCode: "00091",
+      });
+    }
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success message
+      resultMessage: "Sales data fetched successfully.",
       resultCode: "00089",
       sales: salesData,
     });
   } catch (err) {
-    console.error('Error fetching monthly sales:', err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    console.error("Error fetching monthly sales:", err);
+    return res.status(500).json({
+      resultMessage: "An error occurred while fetching monthly sales.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Error handling
   }
 };

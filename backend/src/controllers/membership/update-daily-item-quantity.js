@@ -67,19 +67,16 @@
  *         description: Internal server error.
  */
 
-
-
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id, itemName } = req.params;
   const { quantity } = req.body;
 
-
   if (!id || !itemName || quantity === undefined) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Missing required fields
+      resultMessage: "Missing required fields", // Missing required fields error
       resultCode: "00022",
     });
   }
@@ -94,7 +91,7 @@ export default async (req, res) => {
 
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // Customer not found
+        resultMessage: "Customer not found", // Customer not found error
         resultCode: "00052",
       });
     }
@@ -106,7 +103,7 @@ export default async (req, res) => {
 
     if (!dailyItem) {
       return res.status(404).json({
-        resultMessage: getText("00093"), // Daily item not found
+        resultMessage: "Daily item not found", // Daily item not found error
         resultCode: "00093",
       });
     }
@@ -118,12 +115,12 @@ export default async (req, res) => {
     await customer.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Successfully updated item quantity
+      resultMessage: "Successfully updated item quantity", // Success message
       resultCode: "00089",
       customer: customer, // Return the updated customer object
     });
   } catch (err) {
     console.error("Error updating daily item quantity:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json(errorHelper("00008", req, err.message)); // Internal server error handling
   }
 };

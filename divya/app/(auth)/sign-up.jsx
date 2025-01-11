@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, router } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -24,6 +24,7 @@ import {
 import { useNotifications } from "../../notification/notification";
 
 const SignUp = () => {
+  const router = useRouter();
   const dispatch = useDispatch();
   const { loading, isLogged, verified, error } = useSelector(
     (state) => state.user
@@ -203,9 +204,9 @@ const SignUp = () => {
       .then(() => {
         // Redirect based on role
         if (form.role === "shopOwner") {
-          router.replace("/home");
+          router.push("/home");
         } else if (form.role === "customer") {
-          router.replace("/home");
+          router.push("/home");
         }
         setOtpSent(false);
       })

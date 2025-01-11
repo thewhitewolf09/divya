@@ -62,8 +62,8 @@ const CustomerHome = () => {
   function updateDashboardData(customers) {
     const updatedDashboardData = {
       dailyItemsCustomer: customers.flatMap((customer) =>
-        Array.isArray(customer.dailyItems)
-          ? customer.dailyItems.map((item) => ({
+        Array.isArray(customer?.dailyItems)
+          ? customer?.dailyItems.map((item) => ({
               name: item.itemName.name,
               status:
                 Array.isArray(item.attendance) &&
@@ -111,7 +111,7 @@ const CustomerHome = () => {
       return;
     }
 
-    if (parseFloat(partialPayment) > customer.creditBalance) {
+    if (parseFloat(partialPayment) > customer?.creditBalance) {
       Alert.alert(
         "Invalid Payment",
         "Partial payment cannot exceed total udhar."
@@ -121,7 +121,7 @@ const CustomerHome = () => {
     }
 
     // Calculate updated balance and determine payment status
-    const updatedBalance = customer.creditBalance - parseFloat(partialPayment);
+    const updatedBalance = customer?.creditBalance - parseFloat(partialPayment);
     const paymentStatus = updatedBalance === 0 ? "paid" : "partially_paid";
 
     // Construct payment data
@@ -133,11 +133,11 @@ const CustomerHome = () => {
     try {
       // Await the dispatch action
       const updatedCustomer = await dispatch(
-        updateCreditsOfCustomer({ customerId: customer._id, paymentData })
+        updateCreditsOfCustomer({ customerId: customer?._id, paymentData })
       ).unwrap();
 
       // Fetch the latest customer data
-      await fetchUser(customer._id);
+      await fetchUser(customer?._id);
 
       Alert.alert(
         "Payment Recorded",
@@ -154,18 +154,18 @@ const CustomerHome = () => {
 
   const generateUPIQRCode = () => {
     const upiID = "8303088493@axl"; // Replace with the actual UPI ID
-    return `${upiID}?amount=${customer.creditBalance}&name=Payment for Order&currency=INR`;
+    return `${upiID}?amount=${customer?.creditBalance}&name=Payment for Order&currency=INR`;
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchData(user._id);
-    }, [user._id])
+      fetchData(user?._id);
+    }, [user?._id])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    fetchData(user._id);
+    fetchData(user?._id);
     setRefreshing(false);
   };
 
@@ -190,7 +190,7 @@ const CustomerHome = () => {
                 {customer?.name}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => router.replace("/notifications")}>
+            <TouchableOpacity onPress={() => router.push("/notifications")}>
               <View className="mt-1.5">
                 <Ionicons name="notifications" size={24} color="#0f766e" />
               </View>
@@ -219,7 +219,7 @@ const CustomerHome = () => {
               </Text>
 
               <TouchableOpacity
-                onPress={() => router.replace("/products")}
+                onPress={() => router.push("/products")}
                 className="bg-white mt-1 rounded-full px-6 py-3 border-2 border-teal-700 shadow-lg"
               >
                 <Text className="text-teal-700 font-bold">Shop Now</Text>
@@ -235,12 +235,12 @@ const CustomerHome = () => {
             <ActionButton
               title="🛒 Place an Order"
               colors={["#DEF9C4", "#9CDBA6"]}
-              onPress={() => router.replace("/products")}
+              onPress={() => router.push("/products")}
             />
             <ActionButton
               title="📦 Track Orders"
               colors={["#9CDBA6", "#50B498"]}
-              onPress={() => router.replace("/myorders")}
+              onPress={() => router.push("/myorders")}
             />
           </View>
 
@@ -325,12 +325,12 @@ const CustomerHome = () => {
             <View className="flex-1 justify-center items-center bg-gray-800 bg-opacity-50">
               <View className="bg-white p-8 rounded-lg shadow-lg max-h-[90%] w-[90%]">
                 <Text className="text-teal-700 font-semibold text-xl mb-6 text-center">
-                  Manage Udhar for {customer.name}
+                  Manage Udhar for {customer?.name}
                 </Text>
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <Text className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                    Total Udhar: ₹{customer.creditBalance}
+                    Total Udhar: ₹{customer?.creditBalance}
                   </Text>
 
                   <View className="mb-8">

@@ -82,8 +82,14 @@
  *                   example: "00090"
  */
 
-import { Order, Sale, Customer, User, Notification } from "../../models/index.js"; // Import Order, Sale, and Customer models
-import { errorHelper, getText } from "../../utils/index.js";
+import {
+  Order,
+  Sale,
+  Customer,
+  User,
+  Notification,
+} from "../../models/index.js"; // Import Order, Sale, and Customer models
+import { errorHelper } from "../../utils/index.js";
 import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
@@ -98,23 +104,23 @@ export default async (req, res) => {
     // If the order doesn't exist, return a 404 error
     if (!order) {
       return res.status(404).json({
-        resultMessage: getText("00030"), // "Order not found"
-        resultCode: "00030",
+        resultMessage: "Order not found.",
+        resultCode: "40401",
       });
     }
 
     // Check if the order is already canceled or delivered
     if (order.status === "Cancelled") {
       return res.status(400).json({
-        resultMessage: getText("00092"), // "Order is already canceled"
-        resultCode: "00092",
+        resultMessage: "Order is already canceled.",
+        resultCode: "40001",
       });
     }
 
     if (order.status === "Delivered") {
       return res.status(400).json({
-        resultMessage: getText("00093"), // "Delivered orders cannot be canceled"
-        resultCode: "00093",
+        resultMessage: "Delivered orders cannot be canceled.",
+        resultCode: "40002",
       });
     }
 
@@ -204,12 +210,12 @@ export default async (req, res) => {
 
     // Return the canceled order details
     return res.status(200).json({
-      resultMessage: getText("00094"), // "Order canceled successfully"
-      resultCode: "00094",
+      resultMessage: "Order canceled successfully.",
+      resultCode: "20001",
       order: canceledOrder, // Send the updated order with 'Cancelled' status
     });
   } catch (err) {
     console.error("Error canceling order:", err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Internal server error response
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Internal server error response
   }
 };

@@ -31,6 +31,7 @@ export const loginUser = createAsyncThunk(
       });
       return response; // Response from the login API
     } catch (error) {
+      console.log(error)
       return rejectWithValue(error.response.data.resultMessage); // Handle errors
     }
   }
@@ -60,6 +61,7 @@ export const verifyOtpUser = createAsyncThunk(
         mobile,
         otp,
       });
+      console.log(response.data)
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.resultMessage); // Handle errors

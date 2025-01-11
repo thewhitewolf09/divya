@@ -28,7 +28,7 @@ const ScrollableCategories = ({ products }) => {
         <Text className="text-xl font-semibold text-gray-800 mb-6">
           Categories
         </Text>
-        <TouchableOpacity onPress={() => router.replace("/products")}>
+        <TouchableOpacity onPress={() => router.push("/products")}>
           <Text className="text-teal-700 text-base font-medium underline ">
             View All
           </Text>

@@ -12,6 +12,7 @@
       "backgroundColor": "#ffffff"
     },
     "scheme": "divya",
+    "newArchEnabled": true,
     "assetBundlePatterns": [
       "**/*"
     ],

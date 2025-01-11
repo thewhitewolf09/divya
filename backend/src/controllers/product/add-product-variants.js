@@ -101,39 +101,44 @@
  *                   example: "00090"
  */
 
-
-
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
-export default  async (req, res) => {
+export default async (req, res) => {
   const { id } = req.params;
   const { variantName, variantPrice, variantStockQuantity } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
+  // Validate product ID in params
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "No id provided in params. Please enter an id."
-      resultCode: "00022",
+      resultMessage:
+        "No product ID provided in the request parameters. Please provide a valid ID.",
+      resultCode: "40001", // Custom code for missing ID
     });
   }
 
-  if (!variantName || variantPrice === undefined || variantStockQuantity === undefined) {
+  // Validate variant details in the request body
+  if (
+    !variantName ||
+    variantPrice === undefined ||
+    variantStockQuantity === undefined
+  ) {
     return res.status(400).json({
-      resultMessage: getText("00023"), // "Variant details are required."
-      resultCode: "00023",
+      resultMessage:
+        "All variant details (name, price, and stock quantity) are required.",
+      resultCode: "40002", // Custom code for missing variant details
     });
   }
 
   try {
+    // Find the product by ID
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // "Product not found."
-        resultCode: "00052",
+        resultMessage: "Product not found. Please check the provided ID.",
+        resultCode: "40401", // Custom code for product not found
       });
     }
 
@@ -141,20 +146,24 @@ export default  async (req, res) => {
     product.variants.push({
       variantName,
       variantPrice,
-      variantStockQuantity
+      variantStockQuantity,
     });
 
+    // Save the updated product
     const updatedProduct = await product.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Variant added successfully to the product.",
+      resultCode: "20001", // Custom code for successful addition
       product: updatedProduct,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error adding variant to product:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An error occurred while adding the variant to the product.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };
-
-

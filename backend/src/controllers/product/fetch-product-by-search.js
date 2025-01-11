@@ -72,7 +72,7 @@
 
 
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 // Search Products API
 export default async (req, res) => {
@@ -80,8 +80,8 @@ export default async (req, res) => {
 
   if (!q) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "No search query provided."
-      resultCode: "00022",
+      resultMessage: "No search query provided.",
+      resultCode: "40001", // Custom code for missing query
     });
   }
 
@@ -91,12 +91,16 @@ export default async (req, res) => {
     });
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Products successfully retrieved based on search query.",
+      resultCode: "20001", // Custom code for successful retrieval
       products,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    console.error("Error during product search:", err);
+    return res.status(500).json({
+      resultMessage: "An error occurred while searching for products.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
   }
 };

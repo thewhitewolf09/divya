@@ -95,9 +95,7 @@ const AdminOrderDetailScreen = () => {
           {/* Header with Back Button */}
           <View className="flex-row items-center mb-6">
             <TouchableOpacity
-              onPress={() =>
-                router.canGoBack() ? router.back() : router.push("/home")
-              }
+              onPress={() => router.back()}
               className="mr-4"
             >
               <Ionicons name="chevron-back" size={28} color="#0f766e" />

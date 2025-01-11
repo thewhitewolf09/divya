@@ -29,7 +29,6 @@ const SalesPerformanceScreen = () => {
   const [topSellingProducts, setTopSellingProducts] = useState([]);
   const [salesByProduct, setSalesByProduct] = useState({});
 
-
   useEffect(() => {
     const fetchMonthlySaleData = async () => {
       await dispatch(getMonthlySales());
@@ -154,13 +153,7 @@ const SalesPerformanceScreen = () => {
           {/* Header */}
           <View className="flex-row items-center mb-6">
             <TouchableOpacity
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.push("/home");
-                }
-              }}
+              onPress={() => router.back()}
               style={{ marginRight: 5 }}
             >
               <Ionicons name="chevron-back" size={28} color="teal" />

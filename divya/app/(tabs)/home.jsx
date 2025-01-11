@@ -3,7 +3,7 @@ import CustomerHome from "../home/CustomerHome";
 import ShopOwnerHome from "../home/ShopOwnerHome";
 
 const Home = () => {
-  const { user, role } = useSelector((state) => state.user);
+  const {role } = useSelector((state) => state.user);
   return (
     <>
       {role === "customer" ? (

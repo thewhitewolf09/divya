@@ -102,9 +102,7 @@ const OrderHistoryScreen = () => {
           {/* Back Button & Title */}
           <View className="flex-row items-center mb-4">
             <TouchableOpacity
-              onPress={() =>
-                router.canGoBack() ? router.back() : router.push("/home")
-              }
+              onPress={() => router.back()}
               style={{ marginRight: 5 }}
             >
               <Ionicons name="chevron-back" size={28} color="teal" />

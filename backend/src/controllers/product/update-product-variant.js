@@ -118,8 +118,8 @@ export default async (req, res) => {
 
   if (!id || !variantId) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // "No id provided in params. Please enter an id."
-      resultCode: "00022",
+      resultMessage: "No id or variantId provided in params. Please provide both.",
+      resultCode: "40001", // Custom error code for missing params
     });
   }
 
@@ -129,8 +129,8 @@ export default async (req, res) => {
     variantStockQuantity === undefined
   ) {
     return res.status(400).json({
-      resultMessage: getText("00023"), // "At least one variant detail is required to update."
-      resultCode: "00023",
+      resultMessage: "At least one variant detail (name, price, or stock) is required to update.",
+      resultCode: "40002", // Custom error code for missing update data
     });
   }
 
@@ -138,16 +138,16 @@ export default async (req, res) => {
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // "Product not found."
-        resultCode: "00052",
+        resultMessage: "Product not found.",
+        resultCode: "40401", // Custom error code for product not found
       });
     }
 
     const variant = product.variants.id(variantId);
     if (!variant) {
       return res.status(404).json({
-        resultMessage: getText("00053"), // "Variant not found."
-        resultCode: "00053",
+        resultMessage: "Variant not found.",
+        resultCode: "40402", // Custom error code for variant not found
       });
     }
 
@@ -165,12 +165,12 @@ export default async (req, res) => {
     const updatedProduct = await product.save();
 
     return res.status(200).json({
-      resultMessage: getText("00089"),
-      resultCode: "00089",
+      resultMessage: "Variant updated successfully.",
+      resultCode: "20001", // Custom success code for successful update
       product: updatedProduct,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Custom error code for server errors
   }
 };

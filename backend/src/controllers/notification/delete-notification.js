@@ -77,11 +77,8 @@
  *                   example: "00090"
  */
 
-
-
-
 import { Notification } from "../../models/index.js"; // Import Notification model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
@@ -89,7 +86,7 @@ export default async (req, res) => {
   // Validate required parameter
   if (!id) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // "Required fields are missing."
+      resultMessage: "Required fields are missing.",
       resultCode: "00025",
     });
   }
@@ -100,18 +97,18 @@ export default async (req, res) => {
 
     if (!deletedNotification) {
       return res.status(404).json({
-        resultMessage: getText("00028"), // "Notification not found."
+        resultMessage: "Notification not found.",
         resultCode: "00028",
       });
     }
 
     // Return success response
     return res.status(200).json({
-      resultMessage: getText("00103"), // "Notification successfully deleted."
+      resultMessage: "Notification successfully deleted.",
       resultCode: "00103",
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    return res.status(500).json(errorHelper("00090", req, err.message)); // Internal server error response
   }
 };

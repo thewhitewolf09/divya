@@ -54,24 +54,23 @@
  *         description: Internal server error.
  */
 
-
-
 import { Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
   const { month, year } = req.query;
 
+  // Validate the required fields
   if (!id || !month || !year) {
     return res.status(400).json({
-      resultMessage: getText("00022"), // Missing required fields
+      resultMessage: "Missing required fields.",
       resultCode: "00022",
     });
   }
 
   try {
-    // Fetch customer details with populated dailyItems and itemName
+    // Fetch customer details with populated dailyItems and itemName (to get the price)
     const customer = await Customer.findById(id)
       .populate("addedBy")
       .populate("shops")
@@ -80,48 +79,50 @@ export default async (req, res) => {
 
     if (!customer) {
       return res.status(404).json({
-        resultMessage: getText("00052"), // Customer not found
+        resultMessage: "Customer not found.",
         resultCode: "00052",
       });
     }
 
-    // Ensure month is a number and between 1 and 12
+    // Ensure month is a valid number between 1 and 12
     const monthNumber = parseInt(month, 10);
     if (isNaN(monthNumber) || monthNumber < 1 || monthNumber > 12) {
       return res.status(400).json({
-        resultMessage: getText("00022"), // Invalid month
+        resultMessage: "Invalid month value.",
         resultCode: "00022",
       });
     }
 
-    // Define the start and end of the month
-    const startDate = new Date(year, monthNumber - 1, 1);
+    // Define the start and end date for the month
+    const startDate = new Date(year, monthNumber - 1, 1); // Start of the month
     const endDate = new Date(year, monthNumber, 0); // Last day of the month
 
     let totalFee = 0;
 
-    // Iterate over daily items and calculate the total fee
+    // Iterate over each daily item to calculate the total fee
     for (const item of customer.dailyItems) {
-      const itemName = item.itemName.name; // get the item name
-      const price = item.itemName.price;   // get the price
+      const itemName = item.itemName.name; // Get the item name
+      const price = item.itemName.price; // Get the price of the item
 
-      // Sum up the total fee for the month's attendance
+      // Iterate through attendance records for the item
       for (const record of item.attendance) {
         const recordDate = new Date(record.date);
 
+        // Check if the record's date is within the given month and if the item was taken
         if (recordDate >= startDate && recordDate <= endDate && record.taken) {
-          totalFee += record.quantity * price;
+          totalFee += record.quantity * price; // Add to total fee if valid
         }
       }
     }
 
+    // Return the calculated total fee
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success message
+      resultMessage: "Success", // "Membership summary fetched successfully"
       resultCode: "00089",
-      totalFee,
+      totalFee, // Return the total fee calculated
     });
   } catch (err) {
     console.error("Error fetching membership summary:", err);
-    return res.status(500).json(errorHelper("00008", req, err.message)); // Error handling
+    return res.status(500).json(errorHelper("00008", req, err.message)); // Internal server error
   }
 };

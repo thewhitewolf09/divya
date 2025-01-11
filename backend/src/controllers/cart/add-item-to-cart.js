@@ -90,10 +90,8 @@
  *                   description: Error code.
  */
 
-
-
 import { Cart, Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { customerId } = req.params;
@@ -102,7 +100,8 @@ export default async (req, res) => {
   // Validate required fields
   if (!customerId || !productId || !quantity) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // Message for missing fields
+      resultMessage:
+        "Missing required fields (customerId, productId, quantity).",
       resultCode: "00025",
     });
   }
@@ -110,7 +109,7 @@ export default async (req, res) => {
   // Check if the quantity is valid
   if (quantity < 1) {
     return res.status(400).json({
-      resultMessage: getText("00026"), // Message for invalid quantity
+      resultMessage: "Invalid quantity. Quantity must be greater than 0.",
       resultCode: "00026",
     });
   }
@@ -121,7 +120,7 @@ export default async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
-        resultMessage: getText("00027"), // Message indicating the product does not exist
+        resultMessage: "Product not found.",
         resultCode: "00027",
       });
     }
@@ -136,7 +135,7 @@ export default async (req, res) => {
       // If variantId is provided, find the variant
       if (!variantId) {
         return res.status(400).json({
-          resultMessage: getText("00028"), // Message for missing variant
+          resultMessage: "VariantId is required for products with variants.",
           resultCode: "00028",
         });
       }
@@ -147,7 +146,7 @@ export default async (req, res) => {
 
       if (!variant) {
         return res.status(404).json({
-          resultMessage: getText("00029"), // Message for invalid variant
+          resultMessage: "Variant not found.",
           resultCode: "00029",
         });
       }
@@ -159,7 +158,7 @@ export default async (req, res) => {
 
     // Calculate the final price after applying discount
     if (discount > 0) {
-      finalPrice = price - (price * (discount / 100));
+      finalPrice = price - price * (discount / 100);
     }
 
     // Find the cart for the specified customer
@@ -214,12 +213,16 @@ export default async (req, res) => {
     );
 
     return res.status(200).json({
-      resultMessage: getText("00089"), // Message for successful addition
+      resultMessage: "Product successfully added to the cart.",
       resultCode: "00089",
       cart: populatedCart,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Handle unexpected errors
+    return res.status(500).json({
+      resultMessage: "Internal server error while adding product to cart.",
+      resultCode: "00090",
+      error: err.message,
+    });
   }
 };

@@ -55,9 +55,8 @@
  *                   description: Error code
  */
 
-
 import { Sale, Customer } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { id } = req.params;
@@ -68,7 +67,7 @@ export default async (req, res) => {
 
     if (!sale) {
       return res.status(404).json({
-        resultMessage: getText("00093"), // Sale not found
+        resultMessage: "Sale not found. Please provide a valid sale ID.",
         resultCode: "00093",
       });
     }
@@ -84,7 +83,7 @@ export default async (req, res) => {
         customer.totalPurchases -= totalPrice;
 
         if (sale.isCredit) {
-          customer.creditBalance -= totalPrice; 
+          customer.creditBalance -= totalPrice; // Decrease credit balance
         }
 
         // Save the updated customer document
@@ -96,11 +95,15 @@ export default async (req, res) => {
     await Sale.deleteOne({ _id: id });
 
     return res.status(200).json({
-      resultMessage: getText("00095"), // Sale deleted successfully
+      resultMessage: "Sale deleted successfully.",
       resultCode: "00095",
     });
   } catch (err) {
     console.error("Error deleting sale:", err);
-    return res.status(500).json(errorHelper("00090", req, err.message)); // Error handling
+    return res.status(500).json({
+      resultMessage: "An error occurred while deleting the sale.",
+      resultCode: "00090",
+      error: err.message,
+    }); // Error handling
   }
 };

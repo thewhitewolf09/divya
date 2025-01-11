@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Redirect, Link, router } from "expo-router";
+import { Redirect, Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -23,6 +23,7 @@ import {
 import { useNotifications } from "../../notification/notification";
 
 const SignIn = () => {
+  const router = useRouter();
   const dispatch = useDispatch();
   const { loading, user, error } = useSelector((state) => state.user); // Redux state
 
@@ -34,7 +35,6 @@ const SignIn = () => {
   });
 
   const { expoPushToken } = useNotifications();
-
 
   const [timer, setTimer] = useState(15); // Resend OTP timer
   const [canResend, setCanResend] = useState(false);
@@ -62,7 +62,7 @@ const SignIn = () => {
     try {
       await dispatch(
         loginUser({ mobile: form.mobileNumber, deviceToken: expoPushToken })
-      ).unwrap(); // Dispatch OTP request
+      );
       Alert.alert("Success", "OTP sent to your mobile number");
       setOtpSent(true);
       setTimer(15); // Reset the timer for resending OTP
@@ -78,8 +78,8 @@ const SignIn = () => {
     if (!canResend) return;
 
     try {
-      await dispatch(sendOtpUser(form.mobileNumber)).unwrap(); // Resend OTP
-      setTimer(15); // Reset the timer again
+      await dispatch(sendOtpUser(form.mobileNumber)); // Resend OTP
+      setTimer(15); 
       setCanResend(false);
     } catch (error) {
       Alert.alert("Error", error || "Failed to resend OTP");
@@ -96,8 +96,8 @@ const SignIn = () => {
     try {
       await dispatch(
         verifyOtpUser({ mobile: form.mobileNumber, otp: form.otp })
-      ).unwrap();
-      router.replace("/home");
+      );
+      router.push("/home");
       setOtpSent(false);
     } catch (error) {
       Alert.alert("Error", error || "Failed to login");
@@ -112,14 +112,7 @@ const SignIn = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-          }}
-        >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="pb-4">
           <View
             className="w-full flex justify-center h-full px-4 my-6"
             style={{

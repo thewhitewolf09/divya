@@ -39,23 +39,29 @@
  *                   example: "00090"
  */
 
-
-
 import { Product } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
-
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
-    try {
-      const discountedProducts = await Product.find({ discount: { $gt: 0 }, isActive: true });
-  
-      return res.status(200).json({
-        resultMessage: getText("00089"), // "Discounted products fetched successfully."
-        resultCode: "00089",
-        products: discountedProducts,
-      });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json(errorHelper("00090", req, err.message));
-    }
-  };
+  try {
+    // Fetch discounted products that are active
+    const discountedProducts = await Product.find({
+      discount: { $gt: 0 },
+      isActive: true,
+    });
+
+    return res.status(200).json({
+      resultMessage: "Discounted products fetched successfully.",
+      resultCode: "20001", // Custom code for success
+      products: discountedProducts,
+    });
+  } catch (err) {
+    console.error("Error fetching discounted products:", err);
+    return res.status(500).json({
+      resultMessage:
+        "An internal server error occurred while fetching discounted products.",
+      resultCode: "50001", // Custom code for server error
+      error: err.message,
+    });
+  }
+};

@@ -102,27 +102,27 @@
  *                   example: "00090"
  */
 
-
-
 import { Order } from "../../models/index.js"; // Import Order model
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   try {
     // Fetch all orders, populating customer and product details if necessary
-    const orders = await Order.find().populate('customerId').populate('products.productId');
+    const orders = await Order.find()
+      .populate("customerId")
+      .populate("products.productId");
 
     // If no orders found, return a not found response
     if (!orders || orders.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00029"), // No orders found message
+        resultMessage: "No orders found.",
         resultCode: "00029",
       });
     }
 
     // Return the list of all orders
     return res.status(200).json({
-      resultMessage: getText("00089"), // Success message for fetched orders
+      resultMessage: "Orders fetched successfully.",
       resultCode: "00089",
       orders, // Send the list of all orders
     });

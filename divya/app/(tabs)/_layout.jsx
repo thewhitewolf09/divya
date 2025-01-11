@@ -7,14 +7,14 @@ import Icon from "react-native-vector-icons/Ionicons"; // Use Ionicons or other 
 
 const TabIcon = ({ iconName, color, name, focused }) => {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", gap: 2 }}>
+    <View style={{ alignItems: "center", justifyContent: "center", gap: 1 ,width : 100}}>
       {/* Use the Ionicons icon with vector icons */}
-      <Icon name={iconName} size={24} color={color} />
+      <Icon name={iconName} size={30} color={color} style={{ opacity: 1 }} />
       {/* Text component for the label */}
       <Text
         style={{
           color: color,
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: focused ? "600" : "400",
         }}
       >
@@ -25,7 +25,7 @@ const TabIcon = ({ iconName, color, name, focused }) => {
 };
 
 const TabLayout = () => {
-  const { loading, user, verified } = useSelector((state) => state.user);
+  const { loading, user, verified, role } = useSelector((state) => state.user);
 
   if (!loading && !user && verified) return <Redirect href="/sign-in" />;
 
@@ -38,7 +38,12 @@ const TabLayout = () => {
           tabBarShowLabel: false,
           tabBarStyle: {
             backgroundColor: "white",
-            height: 84,
+            height: 84, // Adjusted tab bar height
+            paddingBottom: 10,
+            paddingTop: 14,
+          },
+          tabBarIconStyle: {
+            opacity: 1, // Force opacity to 1 for inactive icons
           },
         }}
       >
@@ -64,7 +69,7 @@ const TabLayout = () => {
           options={{
             title: "Orders",
             headerShown: false,
-            href: user?.role === "shopOwner" ? "/orders" : null,
+            href: role === "shopOwner" ? "/orders" : null,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 iconName="list-outline"
@@ -98,7 +103,7 @@ const TabLayout = () => {
           options={{
             title: "My Orders",
             headerShown: false,
-            href: user?.role === "customer" ? "/myorders" : null,
+            href: role === "customer" ? "/myorders" : null,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 iconName="list-outline"
@@ -115,7 +120,7 @@ const TabLayout = () => {
           options={{
             title: "Customers",
             headerShown: false,
-            href: user?.role === "shopOwner" ? "/customers" : null,
+            href: role === "shopOwner" ? "/customers" : null,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 iconName="people-outline"

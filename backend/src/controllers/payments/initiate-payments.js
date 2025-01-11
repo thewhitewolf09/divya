@@ -139,7 +139,7 @@ import {
   User,
   Notification,
 } from "../../models/index.js";
-import { errorHelper, getText, paymentGateway } from "../../utils/index.js";
+import { errorHelper, paymentGateway } from "../../utils/index.js";
 import { sendPushNotification } from "../../utils/sendNotification.js";
 
 export default async (req, res) => {
@@ -150,15 +150,15 @@ export default async (req, res) => {
 
     if (!order) {
       return res.status(404).json({
-        resultMessage: getText("00030"),
-        resultCode: "00030",
+        resultMessage: "Order not found.",
+        resultCode: "40401", // Custom error code for order not found
       });
     }
 
     if (order.status !== "Pending") {
       return res.status(400).json({
-        resultMessage: getText("00095"),
-        resultCode: "00095",
+        resultMessage: "Order is not in 'Pending' status.",
+        resultCode: "40001", // Custom error code for invalid order status
       });
     }
 
@@ -166,8 +166,8 @@ export default async (req, res) => {
 
     if (!cart || cart.items.length === 0) {
       return res.status(404).json({
-        resultMessage: getText("00028"),
-        resultCode: "00028",
+        resultMessage: "Cart is empty or not found.",
+        resultCode: "40402", // Custom error code for empty cart
       });
     }
 
@@ -250,7 +250,7 @@ export default async (req, res) => {
         role: "shopOwner",
         deviceToken: { $exists: true },
       });
-      
+
       const adminDeviceTokens = adminUsers
         .map((admin) => admin.deviceToken)
         .filter(Boolean);
@@ -301,8 +301,8 @@ export default async (req, res) => {
       }
 
       return res.status(200).json({
-        resultMessage: getText("00096"),
-        resultCode: "00096",
+        resultMessage: "Payment processed successfully.",
+        resultCode: "20001", // Custom success code for successful payment
         payment: newPayment,
         order,
       });
@@ -324,13 +324,13 @@ export default async (req, res) => {
       await failedPayment.save();
 
       return res.status(400).json({
-        resultMessage: getText("00097"),
-        resultCode: "00097",
+        resultMessage: "Payment processing failed.",
+        resultCode: "40002", // Custom error code for failed payment
         payment: failedPayment,
       });
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    return res.status(500).json(errorHelper("50001", req, err.message)); // Custom error code for server errors
   }
 };

@@ -94,7 +94,7 @@
 
 
 import { Notification } from "../../models/index.js";
-import { errorHelper, getText } from "../../utils/index.js";
+import { errorHelper } from "../../utils/index.js";
 
 export default async (req, res) => {
   const { title, message, recipientRole, recipientId, imageUrl } = req.body;
@@ -102,7 +102,7 @@ export default async (req, res) => {
   // Validate required fields
   if (!title || !message || !recipientRole || !recipientId) {
     return res.status(400).json({
-      resultMessage: getText("00025"), // "Required fields are missing."
+      resultMessage: "Required fields are missing.",
       resultCode: "00025",
     });
   }
@@ -112,7 +112,7 @@ export default async (req, res) => {
     const validRoles = ["shopOwner", "customer"];
     if (!validRoles.includes(recipientRole)) {
       return res.status(400).json({
-        resultMessage: getText("00026"), // "Invalid recipient role."
+        resultMessage: "Invalid recipient role.",
         resultCode: "00026",
       });
     }
@@ -131,12 +131,12 @@ export default async (req, res) => {
 
     // Return success response
     return res.status(201).json({
-      resultMessage: getText("00100"), // "Notification created successfully."
+      resultMessage: "Notification created successfully.",
       resultCode: "00100",
       notification: savedNotification,
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json(errorHelper("00090", req, err.message));
+    return res.status(500).json(errorHelper("00090", req, err.message)); // Internal server error response
   }
 };
