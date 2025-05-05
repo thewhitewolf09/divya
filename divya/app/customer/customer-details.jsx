@@ -69,28 +69,28 @@ const CustomerDetails = () => {
       <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
         <View className="flex-1">
           <Text className="text-gray-800 font-medium">
-            {item.productId.name} (x{item.quantity})
+            {item?.productId?.name} (x{item?.quantity})
           </Text>
-          <Text className="text-gray-600">{formatDateTime(item.date)}</Text>
-          <Text className="text-gray-500 font-pmedium">{item.saleType}</Text>
+          <Text className="text-gray-600">{formatDateTime(item?.date)}</Text>
+          <Text className="text-gray-500 font-pmedium">{item?.saleType}</Text>
         </View>
         <View>
           <Text className="text-gray-800 font-semibold">
-            Total: ₹{item.price}
+            Total: ₹{item?.price}
           </Text>
-          {item.discount > 0 && (
+          {item?.discount > 0 && (
             <Text className="text-gray-500">
-              Discount: ₹{item.productId.discount}
+              Discount: ₹{item?.productId?.discount}
             </Text>
           )}
           <Text
             className={`text-sm ${
-              item.creditDetails?.paymentStatus === "paid"
+              item?.creditDetails?.paymentStatus === "paid"
                 ? "text-green-600"
                 : "text-red-600"
             }`}
           >
-            {item.creditDetails?.paymentStatus}
+            {item?.creditDetails?.paymentStatus}
           </Text>
         </View>
       </View>
@@ -144,14 +144,14 @@ const CustomerDetails = () => {
               </LinearGradient>
               <View className="ml-4">
                 <Text className="text-2xl font-extrabold text-gray-900">
-                  {customer.name}
+                  {customer?.name}
                 </Text>
                 <Text className="text-gray-500 mt-1 text-sm">
-                  {customer.mobile}
+                  {customer?.mobile}
                 </Text>
-                {customer.whatsappNumber && (
+                {customer?.whatsappNumber && (
                   <Text className="text-gray-500 mt-1 text-sm">
-                    WhatsApp: {customer.whatsappNumber}
+                    WhatsApp: {customer?.whatsappNumber}
                   </Text>
                 )}
               </View>
@@ -161,7 +161,7 @@ const CustomerDetails = () => {
             <View className="flex-col justify-between space-y-2">
               <TouchableOpacity
                 onPress={() => {
-                  const phoneNumber = `tel:+91 ${customer.mobile}`;
+                  const phoneNumber = `tel:+91 ${customer?.mobile}`;
                   Linking.openURL(phoneNumber);
                 }}
                 className="bg-teal-100 p-3 rounded-full shadow-lg"
@@ -169,10 +169,10 @@ const CustomerDetails = () => {
                 <Ionicons name="call-outline" size={24} color="teal" />
               </TouchableOpacity>
 
-              {customer.whatsappNumber && (
+              {customer?.whatsappNumber && (
                 <TouchableOpacity
                   onPress={() => {
-                    const whatsappUrl = `whatsapp://send?phone= +91${customer.whatsappNumber}`;
+                    const whatsappUrl = `whatsapp://send?phone= +91${customer?.whatsappNumber}`;
                     Linking.openURL(whatsappUrl);
                   }}
                   className="bg-green-100 p-3 rounded-full shadow-lg"
@@ -186,7 +186,7 @@ const CustomerDetails = () => {
           {/* Customer Address */}
           <View>
             <Text className="text-sm text-gray-700 leading-6">
-              {`${customer.address.street}, ${customer.address.city}, ${customer.address.state} - ${customer.address.postalCode}, ${customer.address.country}`}
+              {`${customer?.address?.street}, ${customer?.address?.city}, ${customer?.address?.state} - ${customer?.address?.postalCode}, ${customer?.address?.country}`}
             </Text>
           </View>
 
@@ -196,16 +196,16 @@ const CustomerDetails = () => {
               Membership:{" "}
               <Text
                 className={
-                  customer.membershipStatus === "active"
+                  customer?.membershipStatus === "active"
                     ? "text-green-600"
                     : "text-red-600"
                 }
               >
-                {customer.membershipStatus}
+                {customer?.membershipStatus}
               </Text>
             </Text>
             <Text className="text-gray-600 font-medium">
-              Joined: {customer.registrationDate.split("T")[0]}
+              Joined: {customer?.registrationDate.split("T")[0]}
             </Text>
           </View>
 
@@ -213,10 +213,10 @@ const CustomerDetails = () => {
           <View className="flex-row justify-between mt-4">
             <Text className="text-teal-700 font-bold">
               Udhar Balance:{" "}
-              <Text className="text-red-500">₹{customer.creditBalance}</Text>
+              <Text className="text-red-500">₹{customer?.creditBalance}</Text>
             </Text>
             <Text className="text-teal-700 font-bold">
-              Total Purchases: ₹{customer.totalPurchases}
+              Total Purchases: ₹{customer?.totalPurchases}
             </Text>
           </View>
         </View>
@@ -249,7 +249,7 @@ const CustomerDetails = () => {
           <Text className="text-lg font-semibold text-teal-700 border-b border-gray-300 pb-2 mb-4">
             Transactions & Purchases
           </Text>
-          {sales.length > 0 ? (
+          {sales?.length > 0 ? (
             <FlatList
               data={sales.slice().sort((a, b) => new Date(b.date) - new Date(a.date))}
               renderItem={renderTransaction}

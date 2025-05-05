@@ -121,6 +121,16 @@ const CustomerList = () => {
               <Ionicons name="swap-vertical" size={18} color="#50B498" />
               <Text className="ml-1 text-teal-600 font-semibold">Sort</Text>
             </TouchableOpacity>
+
+            {/* Add Customer Button */}
+            <TouchableOpacity
+              className="ml-auto flex flex-row items-center border border-teal-600 rounded-lg py-2 px-3"
+              onPress={() => router.push("/customer/add-customer")}
+
+            >
+              <Ionicons name="person-add" size={18} color="#50B498" />
+              {/* <Text className="ml-1 text-teal-600 font-semibold">Add</Text> */}
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -201,16 +211,6 @@ const CustomerList = () => {
           )}
           contentContainerStyle={{ paddingBottom: 270 }}
         />
-
-        {/* Quick Actions */}
-        <View className="absolute bottom-48 left-4 right-4 bg-white p-2  flex flex-row justify-evenly">
-          <ActionButton
-            title=" Add Customer"
-            icon="person-add"
-            colors={["#DEF9C4", "#9CDBA6"]}
-            onPress={() => router.push("/customer/add-customer")}
-          />
-        </View>
       </View>
 
       {/* Filter Bottom Sheet */}
